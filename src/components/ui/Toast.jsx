@@ -82,7 +82,7 @@ export function Toast({ toast }) {
 
 /**
  * ToastContainer - Renders all active toasts
- * Position: bottom-center (best practice for mobile thumb zone)
+ * Position: bottom-right (moved from bottom-center to avoid blocking FAB)
  */
 export function ToastContainer() {
     const { toasts } = useToast()
@@ -91,7 +91,7 @@ export function ToastContainer() {
 
     return (
         <div
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 space-y-2 w-[calc(100%-2rem)] max-w-sm"
+            className="fixed bottom-4 right-4 z-50 space-y-2 w-[calc(100%-2rem)] max-w-sm md:max-w-xs"
             style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
         >
             {toasts.map(toast => (

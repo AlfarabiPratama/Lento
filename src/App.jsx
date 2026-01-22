@@ -65,10 +65,11 @@ function AppContent() {
 
         window.addEventListener('sw-update', handleSWUpdate)
 
-        // Handle SW controller change
+        // Handle SW controller change (app updated successfully)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                showToast('success', 'App telah diperbarui! 🎉', { duration: 3000 })
+                // Subtle notification: app updated in background
+                showToast('success', 'Versi terbaru siap digunakan', { duration: 3000 })
             })
         }
 
