@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 260" role="img" aria-labelledby="title desc">
+  <title id="title">Lento lockup en horizontal</title>
+  <desc id="desc">Wordmark Lento dengan tagline di samping kanan.</desc>
+  <style>
+    .sans { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  </style>
+  <g transform="translate(40,40)">
+    <text class="sans" x="0" y="120" font-size="140" font-weight="700" fill="#111111" letter-spacing="-2">Lento</text>
+    <g transform="translate(648,18)">
+      <circle cx="72" cy="78" r="42" fill="none" stroke="#111111" stroke-width="12" />
+      <circle cx="102" cy="56" r="8" fill="#111111"/>
+    </g>
+    <path d="M 8 164
+             C 88 164, 106 136, 184 136
+             C 266 136, 288 164, 366 164
+             C 448 164, 468 146, 556 146
+             C 632 146, 658 164, 742 164
+             C 830 164, 852 152, 910 152"
+          fill="none" stroke="#111111" stroke-width="10" stroke-linecap="round" opacity="0.92"/>
+    <line x1="960" y1="24" x2="960" y2="176" stroke="#111111" stroke-width="2" opacity="0.35"/>
+    <text class="sans" x="992" y="112" font-size="32" font-weight="500" fill="#111111">Less rush. More rhythm.</text>
+  </g>
+</svg>

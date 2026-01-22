@@ -1,0 +1,42 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/$1"
+        },
+        {
+            "source": "/((?!api).*)",
+            "destination": "/"
+        }
+    ],
+    "crons": [
+        {
+            "path": "/api/sendHabitReminders",
+            "schedule": "0 1 * * *"
+        },
+        {
+            "path": "/api/sendJournalReminders",
+            "schedule": "0 14 * * *"
+        },
+        {
+            "path": "/api/checkBudgetWarnings",
+            "schedule": "0 9 * * *"
+        },
+        {
+            "path": "/api/sendBillReminders",
+            "schedule": "0 9 * * *"
+        },
+        {
+            "path": "/api/sendGoalReminders",
+            "schedule": "0 10 * * *"
+        },
+        {
+            "path": "/api/sendReadingStreakReminders",
+            "schedule": "0 20 * * *"
+        },
+        {
+            "path": "/api/sendWeeklySummary",
+            "schedule": "0 12 * * 0"
+        }
+    ]
+}

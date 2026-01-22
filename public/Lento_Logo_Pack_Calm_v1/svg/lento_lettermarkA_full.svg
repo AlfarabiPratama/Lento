@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Lento lettermark</title>
+  <desc id="desc">Ikon huruf L dengan gelombang ritme.</desc>
+  <rect x="48" y="48" width="416" height="416" rx="96" fill="#FAF9F6" stroke="rgba(45,52,54,0.10)" stroke-width="10"/>
+  <path d="M 178 150
+           L 178 342
+           C 178 360, 190 372, 208 372
+           L 350 372"
+        fill="none" stroke="#2D3436" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 154 272
+           C 198 272, 214 240, 256 240
+           C 300 240, 314 272, 360 272"
+        fill="none" stroke="#5B9A8B" stroke-width="18" stroke-linecap="round" opacity="0.95"/>
+  <circle cx="360" cy="272" r="10" fill="#E8B86D"/>
+</svg>

@@ -1,0 +1,136 @@
+{
+    "name": "Lento - Digital Sanctuary",
+    "short_name": "Lento",
+    "description": "Digital sanctuary untuk membentuk kebiasaan dengan tenang. Track habits, manage finances, and build consistency with offline-first support. Less rush. More rhythm.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FFFDF9",
+    "theme_color": "#5B9A8B",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "categories": [
+        "productivity",
+        "lifestyle",
+        "health",
+        "finance"
+    ],
+    "lang": "id",
+    "dir": "ltr",
+    "prefer_related_applications": false,
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_48.png",
+            "sizes": "48x48",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_64.png",
+            "sizes": "64x64",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_256.png",
+            "sizes": "256x256",
+            "type": "image/png",
+            "purpose": "any"
+        },
+    "icons": [
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_48.png",
+            "sizes": "48x48",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_64.png",
+            "sizes": "64x64",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_256.png",
+            "sizes": "256x256",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "share_target": {
+        "action": "/receive-share",
+        "method": "GET",
+        "enctype": "application/x-www-form-urlencoded",
+        "params": {
+            "title": "title",
+            "text": "text",
+            "url": "url"
+        }
+    },
+    "shortcuts": [
+        {
+            "name": "Mulai Fokus",
+            "short_name": "Fokus",
+            "description": "Mulai sesi Pomodoro",
+            "url": "/?open=pomodoro",
+            "icons": [
+                {
+                    "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Jurnal Hari Ini",
+            "short_name": "Jurnal",
+            "description": "Tulis jurnal hari ini",
+            "url": "/journal/new",
+            "icons": [
+                {
+                    "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Tambah Transaksi",
+            "short_name": "Keuangan",
+            "description": "Catat transaksi baru",
+            "url": "/finance?add=true",
+            "icons": [
+                {
+                    "src": "/Lento_Logo_Pack_Calm_v1/png/lento_icon_192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+# .gitignore additions for Visual Regression Testing
+
+# Playwright test results
+/test-results/
+/playwright-report/
+
+# Playwright trace files
+/playwright/.cache/
+
+# Keep baseline snapshots (commit these)
+# !/tests/**/*-snapshots/

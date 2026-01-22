@@ -1,0 +1,1279 @@
+/* ===== Lento CSS Variables (must be first!) ===== */
+:root {
+  --lento-bg: #FAF9F6;
+  --lento-surface: #FFFFFF;
+  --lento-text: #1F2937;
+  --lento-muted: #6B7280;
+  --lento-light: #9CA3AF;
+  --lento-primary: #5B9A8B;
+  --lento-primary-dark: #4A8577;
+  --lento-success: #22C55E;
+  --lento-danger: #EF4444;
+  --lento-warning: #F59E0B;
+  --lento-border: rgba(31, 41, 55, 0.12);
+  --lento-border-strong: rgba(31, 41, 55, 0.2);
+
+  /* Mobile navigation heights */
+  --bottom-nav-h: 72px;
+  
+  /* Safe Area Insets - iOS notch/dynamic island + Android gesture navigation */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  
+  /* Combined safe areas for common use */
+  --safe-bottom: calc(var(--bottom-nav-h) + var(--safe-area-bottom));
+  --safe-top: var(--safe-area-top);
+
+  /* Typography - Fluid & Responsive with WCAG minimum sizes */
+  --text-min: 0.8125rem; /* 13px - WCAG minimum for body text */
+  --text-body: clamp(0.9375rem, 2vw, 1rem); /* 15px → 16px fluid */
+  --text-small: clamp(0.875rem, 1.5vw, 0.9375rem); /* 14px → 15px fluid */
+  --text-caption: 0.75rem; /* 12px - labels only, not for reading */
+
+  /* Book status colors */
+  --status-tbr-bg: rgb(254 252 232);
+  --status-tbr-text: rgb(161 98 7);
+  --status-reading-bg: rgba(91, 154, 139, 0.1);
+  --status-reading-text: var(--lento-primary);
+  --status-finished-bg: rgb(220 252 231);
+  --status-finished-text: var(--lento-success);
+  --status-dnf-bg: rgb(249 250 251);
+  --status-dnf-text: var(--lento-muted);
+
+  /* UI Density Variables */
+  /* Cozy mode (default) - comfortable spacing */
+  --spacing-section: 1.5rem;
+  /* 24px - between major sections */
+  --spacing-card-gap: 1rem;
+  /* 16px - between cards in list */
+  --spacing-card-inner: 1rem;
+  /* 16px - padding inside cards */
+  --spacing-list-item: 0.75rem;
+  /* 12px - between list items */
+  --text-secondary: var(--text-small);
+  /* 14px → 15px fluid - helper text */
+  --text-caption-size: var(--text-caption);
+  /* 12px - labels/captions */
+}
+
+/* Compact mode - tighter spacing for power users */
+[data-density="compact"] {
+  --spacing-section: 1rem;
+  /* 24px → 16px (-33%) */
+  --spacing-card-gap: 0.75rem;
+  /* 16px → 12px (-25%) */
+  --spacing-card-inner: 0.75rem;
+  /* 16px → 12px (-25%) */
+  --spacing-list-item: 0.5rem;
+  /* 12px → 8px (-33%) */
+  /* Typography remains accessible in compact mode */
+  --text-secondary: var(--text-small);
+  --text-caption-size: var(--text-caption);
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  --lento-bg: #121212 !important;
+  --lento-surface: #1E1E1E !important;
+  --lento-text: #F3F4F6 !important;
+  --lento-muted: #9CA3AF !important;
+  --lento-light: #6B7280 !important;
+  --lento-primary: #6BAFA0 !important;
+  --lento-primary-dark: #5B9A8B !important;
+  --lento-success: #34D399 !important;
+  --lento-danger: #F87171 !important;
+  --lento-warning: #FBBF24 !important;
+  --lento-border: rgba(243, 244, 246, 0.14) !important;
+  --lento-border-strong: rgba(243, 244, 246, 0.25) !important;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Screen reader only utility */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Focus visible - only show focus ring for keyboard navigation */
+  .focus-visible:focus-visible {
+    outline: 3px solid var(--lento-primary);
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
+
+  /* Skip focus for mouse/touch */
+  .focus-visible:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Enhanced focus styles for better visibility */
+  *:focus-visible {
+    outline: 3px solid var(--lento-primary);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  /* Focus within for containers */
+  .focus-within:focus-within {
+    border-color: var(--lento-primary);
+    box-shadow: 0 0 0 3px rgba(91, 154, 139, 0.2);
+  }
+
+  /* PWA Animations */
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      transform: scale(0.9);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+}
+
+/* Base styles - sesuai mockup */
+@layer base {
+
+  /* Root elements need height: 100% for flex layout to work */
+  /* CRITICAL: max-width + overflow-x prevents horizontal scroll on mobile */
+  html,
+  body,
+  #root {
+    height: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Hide scrollbars on mobile devices */
+  @media (max-width: 768px) {
+    * {
+      scrollbar-width: none;
+      /* Firefox */
+      -ms-overflow-style: none;
+      /* IE/Edge */
+    }
+
+    *::-webkit-scrollbar {
+      display: none;
+      /* Chrome, Safari, Opera */
+    }
+  }
+
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv11', 'ss01';
+    /* Offset for sticky Settings tabs (~56px nav height) */
+    scroll-padding-top: 72px;
+  }
+
+  /* Body uses CSS variables for dark mode */
+  body {
+    background-color: var(--lento-bg);
+    color: var(--lento-text);
+    transition: background-color 0.2s, color 0.2s;
+    /* NO min-height: 100vh here - it breaks mobile */
+  }
+
+  /* Override Tailwind colors with CSS variables for dark mode */
+  .bg-paper {
+    background-color: var(--lento-bg);
+  }
+
+  .bg-surface {
+    background-color: var(--lento-surface);
+  }
+
+  .bg-paper-warm {
+    background-color: color-mix(in srgb, var(--lento-surface) 95%, var(--lento-primary) 5%);
+  }
+
+  .text-ink {
+    color: var(--lento-text);
+  }
+
+  .text-ink-muted {
+    color: var(--lento-muted);
+  }
+
+  .text-ink-light {
+    color: var(--lento-light);
+  }
+
+  .border-line {
+    border-color: var(--lento-border);
+  }
+
+  /* Card backgrounds */
+  .card,
+  .card-flat {
+    background-color: var(--lento-surface);
+    border-color: var(--lento-border);
+  }
+
+  /* Focus ring for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--lento-primary);
+    outline-offset: 2px;
+  }
+
+  /* Smooth scrolling */
+  * {
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+  }
+
+  /* Custom scrollbar - subtle */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--lento-border-strong);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--lento-muted);
+  }
+}
+
+/* Component layer - sesuai mockup style */
+@layer components {
+
+  /* Card styles - refined with subtle depth */
+  .card {
+    @apply bg-surface transition-all duration-normal;
+    padding: var(--spacing-card-inner);
+    border-radius: 0.75rem;
+    /* 12px - softer corners */
+    border: 1px solid var(--lento-border);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  /* Hover only on desktop with mouse (not mobile) */
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover {
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.06),
+        0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  .card-flat {
+    @apply bg-surface rounded-lg border border-line p-4;
+  }
+
+  /* ===== Widget Hierarchy System ===== */
+
+  /* Primary widget - stands out, larger, more prominent */
+  /* CRITICAL: max-width + min-width:0 prevents widget from exceeding viewport */
+  .widget-primary {
+    @apply bg-surface;
+    padding: calc(var(--spacing-card-inner) * 1.25);
+    border-radius: 1rem;
+    border: 2px solid rgba(91, 154, 139, 0.15);
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.06),
+      0 2px 4px rgba(0, 0, 0, 0.04);
+    /* CRITICAL: width constraints for mobile */
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* Hover enhancement for primary */
+  @media (hover: hover) and (pointer: fine) {
+    .widget-primary:hover {
+      border-color: rgba(91, 154, 139, 0.25);
+      box-shadow:
+        0 8px 16px rgba(0, 0, 0, 0.08),
+        0 4px 6px rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  /* Secondary widget - compact, outline-only, supportive */
+  /* MOBILE: Use flex-basis instead of min-width so widgets can shrink within scrollable strip */
+  .widget-secondary {
+    @apply bg-transparent;
+    border: 1px dashed rgba(31, 41, 55, 0.12);
+    padding: 0.625rem 0.875rem;
+    border-radius: 0.75rem;
+    /* Use flex-basis for suggested size, but allow flex to control actual size */
+    flex: 0 0 auto;
+    /* Don't grow, don't shrink by default, auto basis */
+    min-width: 140px;
+    /* Minimum for readability */
+    max-width: 200px;
+    /* Cap max size */
+    transition: all 0.2s ease;
+  }
+
+  .widget-secondary:hover {
+    @apply bg-paper-warm;
+    border-style: solid;
+    border-color: rgba(91, 154, 139, 0.2);
+  }
+
+  /* Secondary strip - horizontal scroll with snap */
+  /* FIX: Use viewport-relative width to prevent children from expanding parent */
+  .secondary-strip {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+    /* Full-bleed scroll - extend to page edges */
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    /* FIX: Use viewport width minus sidebar (mobile has no sidebar) */
+    /* This ensures strip fits viewport exactly */
+    width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+
+  /* Desktop: account for sidebar width */
+  @media (min-width: 1024px) {
+    .secondary-strip {
+      width: calc(100vw - 240px - 2rem);
+      /* sidebar 240px + container padding */
+      max-width: calc(100vw - 240px);
+    }
+  }
+
+  .secondary-strip>* {
+    scroll-snap-align: start;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .secondary-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .secondary-strip {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Fade affordance - indicates more content */
+  .secondary-strip-container {
+    position: relative;
+    overflow: hidden;
+    /* Clip all overflow - both X and Y */
+    min-width: 0;
+    max-width: 100%;
+    /* Prevent expansion beyond parent */
+    width: 100%;
+    /* Take full parent width */
+  }
+
+  .secondary-strip-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0.5rem;
+    width: 2rem;
+    background: linear-gradient(to right, transparent, var(--lento-bg));
+    pointer-events: none;
+  }
+
+  /* Legacy card-primary (keep for backwards compat) */
+  .card-primary {
+    @apply bg-primary-50 rounded-lg border border-primary-100 p-4;
+  }
+
+  /* Button styles - matching mockup */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-small transition-all duration-normal cursor-pointer;
+  }
+
+  .btn:active {
+    @apply scale-[0.98];
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-dark shadow-sm;
+  }
+
+  .btn-secondary {
+    @apply btn bg-paper-warm border border-line text-ink hover:bg-paper-cream hover:border-line-dark;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-muted hover:bg-paper-warm hover:text-ink;
+  }
+
+  .btn-icon {
+    @apply inline-flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-normal hover:bg-paper-warm;
+  }
+
+  .btn-sm {
+    @apply text-caption px-3 py-1.5;
+  }
+
+  .btn-lg {
+    @apply text-body px-6 py-3;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-3.5 py-2.5 rounded-lg border border-line bg-surface text-body text-ink placeholder:text-ink-muted focus:border-primary focus:ring-2 focus:ring-teal-200 focus:outline-none transition-all duration-normal;
+  }
+
+  .input-search {
+    @apply input pl-10 bg-paper-warm border-transparent focus:bg-surface focus:border-primary;
+  }
+
+  .textarea {
+    @apply input min-h-[100px] resize-none leading-relaxed;
+  }
+
+  /* Tag/Chip styles */
+  .tag {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-caption font-medium;
+  }
+
+  .tag-primary {
+    @apply tag bg-primary-50 text-primary-700;
+  }
+
+  .tag-secondary {
+    @apply tag bg-paper-cream text-ink-muted;
+  }
+
+  .tag-success {
+    @apply tag bg-green-100 text-success;
+  }
+
+  /* Empty state - friendly sesuai brand */
+  .empty-state {
+    @apply flex flex-col items-center justify-center text-center py-16 px-6;
+  }
+
+  .empty-state-icon {
+    @apply text-5xl mb-4 opacity-80;
+  }
+
+  .empty-state-title {
+    @apply text-h2 text-ink mb-2;
+  }
+
+  .empty-state-desc {
+    @apply text-body text-ink-muted max-w-[280px] leading-relaxed;
+  }
+
+  /* Nav item styles */
+  .nav-item {
+    @apply flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-small font-medium transition-all duration-normal;
+  }
+
+  .nav-item-active {
+    @apply nav-item bg-primary-50 text-primary;
+  }
+
+  .nav-item-inactive {
+    @apply nav-item text-ink-muted hover:bg-paper-warm hover:text-ink;
+  }
+
+  /* Stat card - untuk ringkasan */
+  .stat-card {
+    @apply flex-1 text-center p-4 bg-paper-warm rounded-lg;
+  }
+
+  .stat-value {
+    @apply text-h1 font-semibold;
+  }
+
+  /* ===== Visual Polish - Sanctuary Feel ===== */
+
+  /* Elevation levels for depth hierarchy */
+  .elevation-0 {
+    box-shadow: none;
+  }
+
+  .elevation-1 {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.03),
+      0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  .elevation-2 {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.04),
+      0 4px 8px rgba(0, 0, 0, 0.03);
+  }
+
+  .elevation-3 {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.06),
+      0 8px 16px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Gradient divider - subtle section separator */
+  .divider-gradient {
+    height: 1px;
+    background: linear-gradient(to right,
+        transparent,
+        var(--lento-border) 20%,
+        var(--lento-border) 80%,
+        transparent);
+    border: none;
+  }
+
+  /* Softer focus ring for sanctuary feel */
+  .focus-ring-soft {
+    outline: none;
+  }
+
+  .focus-ring-soft:focus-visible {
+    box-shadow: 0 0 0 3px rgba(91, 154, 139, 0.2);
+  }
+
+  /* Pill badge - for status indicators */
+  .pill {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-tiny font-medium;
+  }
+
+  .pill-primary {
+    @apply pill bg-primary/10 text-primary;
+  }
+
+  .pill-success {
+    @apply pill bg-success/10 text-success;
+  }
+
+  .pill-warning {
+    @apply pill bg-warning/10 text-warning;
+  }
+
+  .pill-muted {
+    @apply pill bg-paper-warm text-ink-muted;
+  }
+
+  /* Glassmorphism card - premium feel */
+  .card-glass {
+    @apply bg-surface/80 backdrop-blur-sm;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    padding: var(--spacing-card-inner);
+  }
+
+  /* Soft glow for active elements */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(91, 154, 139, 0.15);
+  }
+
+  .glow-success {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+  }
+
+  /* Refined stat card with elevation */
+  .stat-card-refined {
+    @apply flex-1 text-center bg-paper-warm rounded-xl;
+    padding: var(--spacing-card-inner);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  }
+
+  .stat-label {
+    @apply text-caption text-ink-muted mt-1;
+  }
+
+  /* Checkbox custom */
+  .checkbox {
+    @apply w-6 h-6 rounded-md border-2 border-line flex items-center justify-center transition-all duration-fast cursor-pointer hover:border-primary;
+  }
+
+  .checkbox-checked {
+    @apply checkbox bg-primary border-primary text-white;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-line my-4;
+  }
+
+  /* Section header */
+  .section-header {
+    @apply flex items-center justify-between mb-3;
+  }
+
+  .section-title {
+    @apply text-h2 text-ink;
+  }
+
+  /* Density-aware spacing utilities */
+  /* Use these instead of space-y-* for density-responsive layouts */
+  .lento-section-gap {
+    margin-bottom: var(--spacing-section);
+  }
+
+  .lento-card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-card-gap);
+  }
+
+  .lento-list-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-list-item);
+  }
+
+  /* ===== Visual Polish - Premium Feel ===== */
+
+  /* Editorial section header - uppercase with letter-spacing */
+  .section-header-editorial {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.6875rem;
+    /* 11px */
+    font-weight: 600;
+    /* Contrast-safe: use darker muted for small text */
+    color: var(--lento-light);
+    /* ~#9CA3AF, 4.5:1+ contrast */
+    margin-bottom: 0.75rem;
+  }
+
+  /* Text overline - small label above sections */
+  .text-overline {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.6875rem;
+    /* 11px - slightly larger than 10px for readability */
+    font-weight: 600;
+    color: var(--lento-light);
+  }
+
+  /* Feature title - bold statement */
+  .text-feature {
+    font-size: 1.25rem;
+    /* 20px */
+    font-weight: 600;
+    color: var(--lento-text);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  /* Gradient divider - fades at edges */
+  .divider-gradient {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right,
+        transparent,
+        var(--lento-border) 20%,
+        var(--lento-border) 80%,
+        transparent);
+    margin: 1.5rem 0;
+  }
+
+  /* Button primary - refined with subtle gradient */
+  .btn-primary {
+    @apply btn text-white;
+    background: linear-gradient(135deg,
+        var(--lento-primary) 0%,
+        var(--lento-primary-dark) 100%);
+    box-shadow:
+      0 1px 2px rgba(91, 154, 139, 0.2),
+      0 2px 4px rgba(91, 154, 139, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  /* Button hover - desktop only */
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 2px 4px rgba(91, 154, 139, 0.3),
+        0 4px 8px rgba(91, 154, 139, 0.15);
+    }
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+}
+
+/* Utilities */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-in {
+    @apply animate-fade-in;
+  }
+
+  .slide-in {
+    @apply animate-slide-up;
+  }
+
+  /* Glass effect untuk elevated content */
+  .glass {
+    @apply bg-surface/80 backdrop-blur-sm;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent;
+  }
+
+  /* Hide scrollbar but keep scroll */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* ========================================
+   LENTO LOGO ANIMATIONS
+   Calm, lo-fi, minimal motion
+   ======================================== */
+
+/* Variables */
+:root {
+  --lento-ease: cubic-bezier(0.2, 0, 0, 1);
+  --lento-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Keyframes */
+@keyframes lentoFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lentoDrawLine {
+  0% {
+    stroke-dashoffset: var(--dash-length);
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lentoDrawRing {
+  0% {
+    stroke-dashoffset: 214;
+    /* 2 * PI * 34 (radius) ≈ 214 */
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lentoPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
+  }
+}
+
+@keyframes lentoBreathe {
+
+  0%,
+  100% {
+    opacity: 0.92;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes lentoFadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ---- WORDMARK ANIMATIONS ---- */
+
+/* Text fade up */
+.lento-text-animate {
+  opacity: 0;
+  animation: lentoFadeUp 550ms var(--lento-ease) forwards;
+  animation-delay: 100ms;
+}
+
+/* Ring draw (on letter o) */
+.lento-ring-animate {
+  stroke-dasharray: 214;
+  stroke-dashoffset: 214;
+  animation: lentoDrawRing 800ms var(--lento-ease-out) forwards;
+  animation-delay: 400ms;
+}
+
+/* Dot pulse (amber) */
+.lento-dot-animate {
+  opacity: 0;
+  transform-origin: center;
+  animation:
+    lentoFadeIn 300ms var(--lento-ease) forwards 900ms,
+    lentoPulse 2.5s ease-in-out infinite 1200ms;
+}
+
+/* Wave teal - draw from left to right */
+.lento-wave-teal-animate {
+  --dash-length: 750;
+  stroke-dasharray: 750;
+  stroke-dashoffset: 750;
+  animation:
+    lentoDrawLine 700ms var(--lento-ease-out) forwards 500ms,
+    lentoBreathe 6s ease-in-out infinite 1500ms;
+}
+
+/* Wave amber - follows teal */
+.lento-wave-amber-animate {
+  --dash-length: 720;
+  stroke-dasharray: 720;
+  stroke-dashoffset: 720;
+  opacity: 0.75;
+  animation:
+    lentoDrawLine 650ms var(--lento-ease-out) forwards 620ms,
+    lentoBreathe 6s ease-in-out infinite 1600ms;
+}
+
+/* ---- LETTERMARK ANIMATIONS ---- */
+
+/* Background fade in */
+.lento-bg-animate {
+  opacity: 0;
+  animation: lentoFadeIn 400ms var(--lento-ease) forwards;
+}
+
+/* L stroke draw */
+.lento-l-stroke-animate {
+  --dash-length: 340;
+  stroke-dasharray: 340;
+  stroke-dashoffset: 340;
+  animation: lentoDrawLine 600ms var(--lento-ease-out) forwards 200ms;
+}
+
+/* Wave draw */
+.lento-wave-animate {
+  --dash-length: 220;
+  stroke-dasharray: 220;
+  stroke-dashoffset: 220;
+  animation:
+    lentoDrawLine 500ms var(--lento-ease-out) forwards 500ms,
+    lentoBreathe 5s ease-in-out infinite 1200ms;
+}
+
+/* ========================================
+   CONFETTI CELEBRATION ANIMATIONS
+   ======================================== */
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-10vh) translateX(var(--x-start)) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(100vh) translateX(var(--x-end)) rotate(var(--rotation));
+    opacity: 0;
+  }
+}
+
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: var(--size, 10px);
+  height: var(--size, 10px);
+  border-radius: 2px;
+  animation: confettiFall var(--duration, 3s) ease-out var(--delay, 0s) forwards;
+}
+
+/* Smaller pieces for variety */
+.confetti-piece:nth-child(3n) {
+  border-radius: 50%;
+}
+
+.confetti-piece:nth-child(5n) {
+  width: calc(var(--size, 10px) * 0.6);
+  height: calc(var(--size, 10px) * 1.5);
+}
+
+/* ========================================
+   STATS DASHBOARD - HEATMAP & CHARTS
+   ======================================== */
+
+/* Heatmap variables */
+:root {
+  --heatmap-cell-size: 11px;
+  --heatmap-cell-radius: 2px;
+  --heatmap-gap: 2px;
+}
+
+/* Mobile: smaller cells to fit better */
+@media (max-width: 640px) {
+  :root {
+    --heatmap-cell-size: 8px;
+    --heatmap-gap: 1px;
+  }
+}
+
+/* Heatmap scroll container - CRITICAL for mobile */
+.heatmap-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 8px 0;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Heatmap grid - 52 columns x 7 rows */
+.heatmap-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--heatmap-cell-size);
+  grid-template-rows: repeat(7, var(--heatmap-cell-size));
+  gap: var(--heatmap-gap);
+  width: max-content;
+  min-width: max-content;
+}
+
+/* Heatmap cell */
+.heatmap-cell {
+  position: relative;
+  width: var(--heatmap-cell-size);
+  height: var(--heatmap-cell-size);
+  border-radius: var(--heatmap-cell-radius);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.3);
+  z-index: 10;
+}
+
+/* Heatmap intensity colors - Light mode */
+.heatmap-cell--empty {
+  background-color: var(--lento-border);
+}
+
+.heatmap-cell--low {
+  background-color: rgba(91, 154, 139, 0.3);
+}
+
+.heatmap-cell--mid {
+  background-color: rgba(91, 154, 139, 0.5);
+}
+
+.heatmap-cell--high {
+  background-color: rgba(91, 154, 139, 0.75);
+}
+
+.heatmap-cell--max {
+  background-color: var(--lento-primary);
+}
+
+/* Heatmap tooltip */
+.heatmap-cell::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: 150%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1.2;
+  color: white;
+  background: rgba(31, 41, 55, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  z-index: 20;
+}
+
+.heatmap-cell:hover::after {
+  opacity: 1;
+}
+
+/* Weekly Chart */
+.weekly-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px;
+  min-height: 140px;
+}
+
+.weekly-chart-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.weekly-chart-bar-container {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.weekly-chart-bar {
+  width: 70%;
+  max-width: 20px;
+  min-height: 4px;
+  border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(180deg, var(--lento-primary), var(--lento-primary-dark));
+  transition: height 0.3s ease, transform 0.15s ease;
+}
+
+.weekly-chart-bar-wrapper:hover .weekly-chart-bar {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(91, 154, 139, 0.3);
+}
+
+.weekly-chart-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lento-text);
+}
+
+.weekly-chart-label {
+  font-size: 10px;
+  color: var(--lento-muted);
+}
+
+/* ---- ACCESSIBILITY ---- */
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+  .lento-text-animate,
+  .lento-ring-animate,
+  .lento-dot-animate,
+  .lento-wave-teal-animate,
+  .lento-wave-amber-animate,
+  .lento-bg-animate,
+  .lento-l-stroke-animate,
+  .lento-wave-animate {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  /* Visual polish: disable lift/transform animations */
+  .card,
+  .btn-primary {
+    transition: none !important;
+  }
+
+  .btn-primary:hover {
+    transform: none !important;
+  }
+}
+
+/* ========================================
+   CALENDAR SLIDE ANIMATIONS
+   ======================================== */
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.calendar-slide-next {
+  animation: slideInFromRight 0.25s ease-out;
+}
+
+.calendar-slide-prev {
+  animation: slideInFromLeft 0.25s ease-out;
+}
+
+/* ========================================
+   CALENDAR ACTIVITY INTENSITY
+   ======================================== */
+
+.calendar-intensity-low {
+  background-color: rgba(var(--color-primary-rgb, 20, 184, 166), 0.1);
+}
+
+.calendar-intensity-mid {
+  background-color: rgba(var(--color-primary-rgb, 20, 184, 166), 0.2);
+}
+
+.calendar-intensity-high {
+  background-color: rgba(var(--color-primary-rgb, 20, 184, 166), 0.35);
+}
+
+.calendar-intensity-max {
+  background-color: rgba(var(--color-primary-rgb, 20, 184, 166), 0.5);
+}
+
+/* ========================================
+   TOUCH TARGET ACCESSIBILITY
+   WCAG 2.5.5 - Target Size (Level AAA)
+   ======================================== */
+
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.touch-target-icon {
+  @apply w-11 h-11; /* 44px */
+}
+
+/* For buttons that need padding to reach 44px instead of changing size */
+.touch-target-padded {
+  padding: 0.5rem; /* Adds 16px total (8px each side) to reach 44px */
+}
+
+/* Ensure touch targets have adequate spacing */
+.touch-spacing {
+  margin: 8px; /* 8px spacing between touch targets */
+}

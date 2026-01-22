@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lento - Create Test Data for Phase 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #334155;
+            font-size: 18px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon {
+            font-size: 20px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error {
+            background: #ef4444;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .info {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .status strong {
+            color: #1e293b;
+        }
+
+        code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            color: #78350f;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .steps {
+            margin-top: 12px;
+            padding-left: 20px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .steps li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Create Test Data</h1>
+        <p class="subtitle">Helper untuk testing Phase 2 - Goal & Reading Streak Reminders</p>
+
+        <div class="warning">
+            ⚠️ <strong>Catatan:</strong> Script ini hanya bisa berjalan di production app karena menggunakan IndexedDB yang sama. Buka di <code>https://lento-flame.vercel.app</code> lalu paste script ini di Console.
+        </div>
+
+        <!-- Goal Test Data -->
+        <div class="section">
+            <h2><span class="icon">🎯</span> Goal Test Data</h2>
+            <p class="info">
+                Membuat 3 goals dengan deadline berbeda untuk test notification timing.
+            </p>
+            <button onclick="createGoalTestData()" id="btnGoals">Buat Test Goals</button>
+            <div class="success" id="successGoals"></div>
+            <div class="error" id="errorGoals"></div>
+        </div>
+
+        <!-- Reading Streak Test Data -->
+        <div class="section">
+            <h2><span class="icon">📚</span> Reading Streak Test Data</h2>
+            <p class="info">
+                Membuat book sessions untuk 3 hari berturut-turut (encouragement notification).
+            </p>
+            <button onclick="createStreakTestData()" id="btnStreak">Buat Test Streak</button>
+            <div class="success" id="successStreak"></div>
+            <div class="error" id="errorStreak"></div>
+        </div>
+
+        <!-- Manual Instructions -->
+        <div class="section">
+            <h2><span class="icon">📋</span> Cara Testing Manual</h2>
+            <ol class="steps">
+                <li>Buka <code>https://lento-flame.vercel.app</code></li>
+                <li>Login dengan akun test</li>
+                <li>Buka Developer Console (F12)</li>
+                <li>Copy-paste function dari script ini</li>
+                <li>Jalankan <code>createGoalTestData()</code> atau <code>createStreakTestData()</code></li>
+                <li>Trigger cron di Vercel Dashboard</li>
+                <li>Verifikasi notification diterima</li>
+            </ol>
+        </div>
+
+        <!-- Status -->
+        <div class="status">
+            <strong>Status:</strong> Siap untuk testing<br>
+            <strong>Environment:</strong> Production (https://lento-flame.vercel.app)<br>
+            <strong>Phase:</strong> Phase 2 - Goal Milestones & Reading Streaks
+        </div>
+    </div>
+
+    <script>
+        // Helper Functions (copy ke Console browser)
+
+        async function createGoalTestData() {
+            const btn = document.getElementById('btnGoals');
+            const successDiv = document.getElementById('successGoals');
+            const errorDiv = document.getElementById('errorGoals');
+            
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            successDiv.classList.remove('show');
+            errorDiv.classList.remove('show');
+
+            try {
+                // Open IndexedDB
+                const db = await openDB();
+                
+                const today = new Date();
+                const goals = [
+                    {
+                        id: 'test-goal-7d-' + Date.now(),
+                        type: 'savings',
+                        title: 'Test Goal - 7 Days',
+                        target_amount: 1000000,
+                        deadline: formatDate(addDays(today, 7)),
+                        source: { kind: 'netWorth', ref_id: null },
+                        status: 'active',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        user_id: 'local',
+                        sync_status: 'pending'
+                    },
+                    {
+                        id: 'test-goal-3d-' + Date.now(),
+                        type: 'savings',
+                        title: 'Test Goal - 3 Days',
+                        target_amount: 500000,
+                        deadline: formatDate(addDays(today, 3)),
+                        source: { kind: 'netWorth', ref_id: null },
+                        status: 'active',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        user_id: 'local',
+                        sync_status: 'pending'
+                    },
+                    {
+                        id: 'test-goal-1d-' + Date.now(),
+                        type: 'savings',
+                        title: 'Test Goal - Tomorrow',
+                        target_amount: 250000,
+                        deadline: formatDate(addDays(today, 1)),
+                        source: { kind: 'netWorth', ref_id: null },
+                        status: 'active',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        user_id: 'local',
+                        sync_status: 'pending'
+                    }
+                ];
+
+                // Insert goals
+                const tx = db.transaction('goals', 'readwrite');
+                const store = tx.objectStore('goals');
+                
+                for (const goal of goals) {
+                    await store.add(goal);
+                }
+                
+                await tx.complete;
+                
+                successDiv.textContent = `✅ Berhasil membuat 3 test goals! Check di page /goals`;
+                successDiv.classList.add('show');
+                
+                console.log('Test goals created:', goals);
+            } catch (error) {
+                console.error('Error creating goals:', error);
+                errorDiv.textContent = `❌ Error: ${error.message}`;
+                errorDiv.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Buat Test Goals';
+            }
+        }
+
+        async function createStreakTestData() {
+            const btn = document.getElementById('btnStreak');
+            const successDiv = document.getElementById('successStreak');
+            const errorDiv = document.getElementById('errorStreak');
+            
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            successDiv.classList.remove('show');
+            errorDiv.classList.remove('show');
+
+            try {
+                // Open IndexedDB
+                const db = await openDB();
+                
+                // Check if there's a reading book
+                const booksTx = db.transaction('books', 'readonly');
+                const booksStore = booksTx.objectStore('books');
+                const allBooks = await booksStore.getAll();
+                const readingBooks = allBooks.filter(b => b.status === 'reading');
+                
+                if (readingBooks.length === 0) {
+                    throw new Error('Tidak ada buku dengan status "reading". Tambah buku dulu di /books');
+                }
+                
+                const testBook = readingBooks[0];
+                const today = new Date();
+                
+                const sessions = [
+                    {
+                        id: 'test-session-day1-' + Date.now(),
+                        bookId: testBook.id,
+                        occurredAt: addDays(today, -2).toISOString(),
+                        dayKey: formatDate(addDays(today, -2)),
+                        delta: 20,
+                        unit: testBook.progress?.unit || 'pages',
+                        durationMinutes: null,
+                        note: 'Test reading session - Day 1',
+                        source: 'manual',
+                        deleted: false,
+                        deletedAt: null,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        user_id: 'local',
+                        sync_status: 'pending'
+                    },
+                    {
+                        id: 'test-session-day2-' + Date.now(),
+                        bookId: testBook.id,
+                        occurredAt: addDays(today, -1).toISOString(),
+                        dayKey: formatDate(addDays(today, -1)),
+                        delta: 25,
+                        unit: testBook.progress?.unit || 'pages',
+                        durationMinutes: null,
+                        note: 'Test reading session - Day 2',
+                        source: 'manual',
+                        deleted: false,
+                        deletedAt: null,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        user_id: 'local',
+                        sync_status: 'pending'
+                    },
+                    {
+                        id: 'test-session-day3-' + Date.now(),
+                        bookId: testBook.id,
+                        occurredAt: today.toISOString(),
+                        dayKey: formatDate(today),
+                        delta: 30,
+                        unit: testBook.progress?.unit || 'pages',
+                        durationMinutes: null,
+                        note: 'Test reading session - Day 3',
+                        source: 'manual',
+                        deleted: false,
+                        deletedAt: null,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        user_id: 'local',
+                        sync_status: 'pending'
+                    }
+                ];
+
+                // Insert sessions
+                const tx = db.transaction('book_sessions', 'readwrite');
+                const store = tx.objectStore('book_sessions');
+                
+                for (const session of sessions) {
+                    await store.add(session);
+                }
+                
+                await tx.complete;
+                
+                successDiv.textContent = `✅ Berhasil membuat 3-day streak untuk "${testBook.title}"! Trigger cron besok untuk test encouragement notification.`;
+                successDiv.classList.add('show');
+                
+                console.log('Test streak sessions created:', sessions);
+            } catch (error) {
+                console.error('Error creating streak:', error);
+                errorDiv.textContent = `❌ Error: ${error.message}`;
+                errorDiv.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Buat Test Streak';
+            }
+        }
+
+        // Utility functions
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('lento_db', 1);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Show instructions on load
+        console.log(`
+🧪 Lento Test Data Creator - Phase 2
+
+Untuk membuat test data:
+
+1. GOAL TEST DATA:
+   Copy dan paste ke console:
+   
+   ${createGoalTestData.toString()}
+   
+   Lalu jalankan: createGoalTestData()
+
+2. READING STREAK TEST DATA:
+   Copy dan paste ke console:
+   
+   ${createStreakTestData.toString()}
+   
+   Lalu jalankan: createStreakTestData()
+
+3. Jangan lupa copy utility functions juga:
+   
+   ${openDB.toString()}
+   ${addDays.toString()}
+   ${formatDate.toString()}
+
+Setelah data dibuat:
+- Check di app (refresh page)
+- Trigger cron di Vercel Dashboard
+- Verifikasi notification received
+        `);
+    </script>
+</body>
+</html>
