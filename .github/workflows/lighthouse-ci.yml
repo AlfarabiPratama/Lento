@@ -29,10 +29,10 @@ jobs:
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            http://localhost:5173
-            http://localhost:5173/habits
-            http://localhost:5173/finance
-            http://localhost:5173/books
+            http://localhost:4173
+            http://localhost:4173/habits
+            http://localhost:4173/finance
+            http://localhost:4173/books
           uploadArtifacts: true
           temporaryPublicStorage: true
           budgetPath: ./lighthouse-budget.json
