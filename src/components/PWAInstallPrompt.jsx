@@ -1,164 +1,170 @@
 /**
  * PWA Install Prompt Component
  * 
- * Best Practice: Tampilkan install prompt setelah user engage,
- * bukan langsung saat pertama buka
+ * Enhanced with:
+ * - usePWAInstall hook for state management
+ * - Platform-specific instructions (iOS/Android/Desktop)
+ * - Smart prompt timing (after 2nd visit or engagement)
+ * - Lento brand consistency
  */
 
-import { useState, useEffect } from 'react'
-import { IconX, IconDeviceMobile } from '@tabler/icons-react'
+import { IconX, IconDownload, IconDeviceMobile } from '@tabler/icons-react'
+import { usePWAInstall } from '../hooks/usePWAInstall'
 
 export function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [showPrompt, setShowPrompt] = useState(false)
+  const { 
+    showPrompt, 
+    promptInstall, 
+    dismissPrompt, 
+    platform,
+    isInstallable,
+  } = usePWAInstall()
 
-  useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      return // Already installed
-    }
-
-    // Check if user already dismissed
-    const dismissed = localStorage.getItem('lento_pwa_install_dismissed')
-    if (dismissed === 'permanent') return
-
-    const tempDismissUntil = localStorage.getItem('lento_pwa_install_until')
-    if (tempDismissUntil) {
-      const dismissDate = new Date(tempDismissUntil)
-      if (dismissDate > new Date()) return
-    }
-
-    // Best Practice PWA: Tangkap beforeinstallprompt
-    const handler = (e) => {
-      e.preventDefault()
-      setDeferredPrompt(e)
-      
-      // Tampilkan prompt setelah user engage (jangan langsung)
-      const visitCount = parseInt(localStorage.getItem('lento_visit_count') || '0')
-      const hasEngaged = localStorage.getItem('user_engaged') || visitCount >= 2
-      
-      if (hasEngaged) {
-        setTimeout(() => setShowPrompt(true), 8000) // 8 detik delay
-      }
-    }
-
-    window.addEventListener('beforeinstallprompt', handler)
-    
-    // Track engagement
-    const engagementTimer = setTimeout(() => {
-      localStorage.setItem('user_engaged', 'true')
-    }, 30000) // 30 detik
-
-    // Listen for install event
-    window.addEventListener('appinstalled', () => {
-      console.log('[PWA] App installed successfully')
-      setShowPrompt(false)
-      setDeferredPrompt(null)
-    })
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler)
-      clearTimeout(engagementTimer)
-    }
-  }, [])
-
-  const handleInstall = async () => {
-    if (!deferredPrompt) return
-
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    
-    console.log(`[PWA] Install prompt outcome: ${outcome}`)
-    
-    if (outcome === 'accepted') {
-      console.log('[PWA] User accepted the install prompt')
-    } else {
-      console.log('[PWA] User dismissed the install prompt')
-      // Set reminder untuk besok
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      localStorage.setItem('lento_pwa_install_until', tomorrow.toISOString())
-    }
-    
-    setDeferredPrompt(null)
-    setShowPrompt(false)
+  if (!showPrompt || !isInstallable) {
+    return null
   }
 
-  const handleDismiss = () => {
-    setShowPrompt(false)
-    // Dismiss sampai besok
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    localStorage.setItem('lento_pwa_install_until', tomorrow.toISOString())
+  // iOS Safari doesn't support beforeinstallprompt
+  // Show manual instructions instead
+  if (platform === 'ios') {
+    return <IOSInstallInstructions onDismiss={dismissPrompt} />
   }
 
-  const handleDismissPermanent = () => {
-    setShowPrompt(false)
-    localStorage.setItem('lento_pwa_install_dismissed', 'permanent')
-  }
-
-  if (!showPrompt) return null
-
+  // Android & Desktop: Show native prompt
   return (
-    <div className="fixed bottom-4 left-4 right-4 bg-white rounded-xl shadow-2xl border-2 border-primary-500 z-50 animate-slide-up max-w-md mx-auto">
-      <div className="p-4">
-        <button
-          onClick={handleDismiss}
-          className="absolute top-2 right-2 min-w-11 min-h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-          aria-label="Tutup"
-        >
-          <IconX className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-start gap-3 mb-3">
-          <div className="flex-shrink-0">
-            <IconDeviceMobile className="w-12 h-12 text-primary-500" />
+    <div className="fixed bottom-20 sm:bottom-4 left-4 right-4 z-50 animate-slide-up">
+      <div className="bg-paper rounded-2xl shadow-xl border border-canvas-border p-4 max-w-md mx-auto">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-teal-600 rounded-xl flex items-center justify-center">
+              <IconDeviceMobile className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-ink-900">
+                Install Lento
+              </h3>
+              <p className="text-small text-ink-muted">
+                Akses lebih cepat & bisa offline
+              </p>
+            </div>
           </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 text-lg">
+          <button
+            onClick={dismissPrompt}
+            className="p-1 hover:bg-canvas-100 rounded-lg transition-colors"
+            aria-label="Tutup"
+          >
+            <IconX className="w-5 h-5 text-ink-muted" />
+          </button>
+        </div>
+
+        {/* Benefits */}
+        <ul className="space-y-2 mb-4 text-small text-ink-700">
+          <li className="flex items-center gap-2">
+            <span className="text-teal-600">✓</span>
+            <span>Buka langsung dari home screen</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-teal-600">✓</span>
+            <span>Bekerja offline tanpa koneksi</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-teal-600">✓</span>
+            <span>Notifikasi reminder langsung</span>
+          </li>
+        </ul>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={promptInstall}
+            className="flex-1 bg-primary hover:bg-primary-dark text-white font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            <IconDownload className="w-4 h-4" />
+            Install
+          </button>
+          <button
+            onClick={dismissPrompt}
+            className="px-4 py-2.5 text-ink-muted hover:bg-canvas-100 rounded-xl transition-colors font-medium"
+          >
+            Nanti Saja
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+/**
+ * iOS-specific install instructions
+ * (Safari doesn't support beforeinstallprompt)
+ */
+function IOSInstallInstructions({ onDismiss }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+      <div className="bg-paper rounded-t-3xl sm:rounded-2xl shadow-xl max-w-md w-full p-6 animate-slide-up">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-teal-600 rounded-xl flex items-center justify-center">
+              <IconDeviceMobile className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-ink-900">
               Install Lento
             </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Dapatkan akses cepat dan terima reminder bahkan saat offline!
+          </div>
+          <button
+            onClick={onDismiss}
+            className="p-1 hover:bg-canvas-100 rounded-lg transition-colors"
+            aria-label="Tutup"
+          >
+            <IconX className="w-5 h-5 text-ink-muted" />
+          </button>
+        </div>
+
+        {/* iOS Instructions */}
+        <div className="space-y-4">
+          <p className="text-small text-ink-700">
+            Untuk install Lento di iPhone/iPad:
+          </p>
+
+          <ol className="space-y-3 text-small text-ink-700">
+            <li className="flex gap-3">
+              <span className="font-semibold text-primary shrink-0">1.</span>
+              <div>
+                Tap tombol <strong>Share</strong> 
+                <svg className="inline w-5 h-5 mx-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z"/>
+                </svg>
+                di menu Safari
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="font-semibold text-primary shrink-0">2.</span>
+              <span>
+                Pilih <strong>"Add to Home Screen"</strong>
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="font-semibold text-primary shrink-0">3.</span>
+              <span>
+                Tap <strong>"Add"</strong> untuk konfirmasi
+              </span>
+            </li>
+          </ol>
+
+          <div className="bg-teal-50 border border-teal-200 rounded-xl p-3 mt-4">
+            <p className="text-xs text-teal-800">
+              💡 <strong>Tips:</strong> Setelah install, buka Lento dari home screen untuk pengalaman terbaik!
             </p>
           </div>
         </div>
 
-        <div className="space-y-2 mb-4 ml-15">
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="text-green-500">✓</span>
-            <span>Akses instan dari home screen</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="text-green-500">✓</span>
-            <span>Bekerja offline</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="text-green-500">✓</span>
-            <span>Push notifications</span>
-          </div>
-        </div>
-        
-        <div className="flex gap-2">
-          <button
-            onClick={handleInstall}
-            className="flex-1 bg-primary-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
-          >
-            Install Sekarang
-          </button>
-          <button
-            onClick={handleDismiss}
-            className="px-4 py-2.5 text-gray-600 hover:text-gray-800 font-medium"
-          >
-            Nanti
-          </button>
-        </div>
-
+        {/* Close Button */}
         <button
-          onClick={handleDismissPermanent}
-          className="w-full text-xs text-gray-500 hover:text-gray-700 mt-2"
+          onClick={onDismiss}
+          className="w-full mt-6 bg-canvas-100 hover:bg-canvas-200 text-ink-900 font-medium py-3 px-4 rounded-xl transition-colors"
         >
-          Jangan tanya lagi
+          Mengerti
         </button>
       </div>
     </div>

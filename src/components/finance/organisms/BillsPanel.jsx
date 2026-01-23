@@ -13,6 +13,7 @@ import { format, isAfter, differenceInDays } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 import { useBills } from '../../../hooks/useBills'
 import { useAuth } from '../../../hooks/useAuth'
+import { StatusBadge } from '../../ui/StatusBadge'
 
 /**
  * BillsPanel - Bills management with list, stats, and actions
@@ -55,16 +56,46 @@ export default function BillsPanel() {
     }
 
     const getBillStatus = (bill) => {
-        if (bill.status === 'paid') return { label: 'Lunas', color: 'text-green-600', bg: 'bg-green-50' }
+        if (bill.status === 'paid') return { 
+            label: 'Lunas', 
+            color: 'text-green-600', 
+            bg: 'bg-green-50',
+            badgeStatus: 'paid'
+        }
         
         const daysUntil = getDaysUntilDue(bill.dueDate)
         
-        if (daysUntil < 0) return { label: 'Lewat jatuh tempo', color: 'text-red-600', bg: 'bg-red-50' }
-        if (daysUntil === 0) return { label: 'Jatuh tempo hari ini', color: 'text-orange-600', bg: 'bg-orange-50' }
-        if (daysUntil === 1) return { label: 'Jatuh tempo besok', color: 'text-orange-600', bg: 'bg-orange-50' }
-        if (daysUntil <= 3) return { label: `${daysUntil} hari lagi`, color: 'text-yellow-600', bg: 'bg-yellow-50' }
+        if (daysUntil < 0) return { 
+            label: 'Lewat jatuh tempo', 
+            color: 'text-red-600', 
+            bg: 'bg-red-50',
+            badgeStatus: 'overdue'
+        }
+        if (daysUntil === 0) return { 
+            label: 'Jatuh tempo hari ini', 
+            color: 'text-orange-600', 
+            bg: 'bg-orange-50',
+            badgeStatus: 'warning'
+        }
+        if (daysUntil === 1) return { 
+            label: 'Jatuh tempo besok', 
+            color: 'text-orange-600', 
+            bg: 'bg-orange-50',
+            badgeStatus: 'warning'
+        }
+        if (daysUntil <= 3) return { 
+            label: `${daysUntil} hari lagi`, 
+            color: 'text-yellow-600', 
+            bg: 'bg-yellow-50',
+            badgeStatus: 'warning'
+        }
         
-        return { label: `${daysUntil} hari lagi`, color: 'text-ink-muted', bg: 'bg-surface' }
+        return { 
+            label: `${daysUntil} hari lagi`, 
+            color: 'text-ink-muted', 
+            bg: 'bg-surface',
+            badgeStatus: 'neutral'
+        }
     }
 
     const handleMarkAsPaid = async (billId) => {
@@ -211,9 +242,11 @@ export default function BillsPanel() {
                                                     <IconCalendar size={14} />
                                                     {format(new Date(bill.dueDate), 'd MMM yyyy', { locale: idLocale })}
                                                 </span>
-                                                <span className={`px-2 py-0.5 rounded-full ${status.bg} ${status.color} font-medium`}>
-                                                    {status.label}
-                                                </span>
+                                                <StatusBadge 
+                                                    status={status.badgeStatus} 
+                                                    label={status.label} 
+                                                    size="sm"
+                                                />
                                             </div>
                                             
                                             {bill.category && (

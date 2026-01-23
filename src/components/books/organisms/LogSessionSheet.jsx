@@ -77,8 +77,14 @@ export function LogSessionSheet({ book, onClose, onSuccess }) {
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-            <div className="bg-surface rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 space-y-4">
+        <div 
+            className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+            onClick={onClose}
+        >
+            <div 
+                className="bg-surface rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 space-y-4"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>

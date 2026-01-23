@@ -73,7 +73,7 @@ export function JournalWidget({ onQuickSave, className = '' }) {
                 <button
                     onClick={handleSave}
                     disabled={!text.trim() || saving}
-                    className="btn-primary w-full py-1 sm:py-2 text-[10px] sm:text-small"
+                    className="btn-primary w-full py-1.5 sm:py-2 text-xs sm:text-small min-h-[44px] sm:min-h-0"
                 >
                     {saving ? 'Menyimpan...' : 'Simpan'}
                 </button>

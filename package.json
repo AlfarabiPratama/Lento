@@ -12,14 +12,22 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test tests/e2e",
     "test:e2e:ui": "playwright test tests/e2e --ui",
+    "test:pwa": "playwright test tests/pwa.spec.js",
+    "test:pwa:ui": "playwright test tests/pwa.spec.js --ui",
     "test:a11y": "playwright test tests/a11y",
     "test:visual": "playwright test tests/visual",
     "test:visual:update": "playwright test tests/visual --update-snapshots",
     "test:visual:ui": "playwright test tests/visual --ui",
     "lighthouse": "lighthouse https://lento-flame.vercel.app --output html --output-path ./reports/lighthouse.html",
     "lighthouse:local": "lighthouse http://localhost:4173 --output html --output-path ./reports/lighthouse-local.html",
+    "lighthouse:mobile": "lighthouse https://lento-flame.vercel.app --output html --output-path ./reports/lighthouse-mobile.html --preset=mobile --throttling.cpuSlowdownMultiplier=4",
+    "lighthouse:ci": "lhci autorun",
     "audit:typography": "node scripts/audit-typography.js",
-    "audit:touch-targets": "node scripts/audit-touch-targets.js"
+    "audit:touch-targets": "node scripts/audit-touch-targets.js",
+    "analyze": "vite-bundle-visualizer",
+    "perf": "node scripts/performance-check.js",
+    "perf:ci": "node scripts/performance-check.js --ci",
+    "pwa:test": "npm run test:pwa && npm run lighthouse:ci"
   },
   "dependencies": {
     "@dataconnect/generated": "file:src/dataconnect-generated",

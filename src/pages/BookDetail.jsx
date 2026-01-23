@@ -271,8 +271,14 @@ function BookDetail() {
 
             {/* Edit Book Modal */}
             {showEditForm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-                    <div className="bg-surface rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto scrollbar-hide animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
+                <div 
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+                    onClick={() => setShowEditForm(false)}
+                >
+                    <div 
+                        className="bg-surface rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto scrollbar-hide animate-in zoom-in-95 slide-in-from-bottom-8 duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <h2 className="text-h2 text-ink mb-4">Edit Buku</h2>
                         <BookForm
                             initialData={book}

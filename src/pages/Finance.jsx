@@ -255,16 +255,22 @@ function FinancePage() {
                             <div className="flex-1 space-y-4">
                                 {/* Quick actions */}
                                 <div className="flex gap-2">
-                                    <button onClick={() => handleAddTransaction('expense')} className="btn-secondary">
-                                        <IconMinus size={18} className="text-red-500" />
+                                    <button onClick={() => handleAddTransaction('expense')} className="btn-secondary" aria-label="Tambah pengeluaran">
+                                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-red-100 dark:bg-red-950/30">
+                                            <IconMinus size={14} className="text-red-600 dark:text-red-400" stroke={2.5} />
+                                        </div>
                                         <span>Keluar</span>
                                     </button>
-                                    <button onClick={() => handleAddTransaction('income')} className="btn-secondary">
-                                        <IconPlus size={18} className="text-green-500" />
+                                    <button onClick={() => handleAddTransaction('income')} className="btn-secondary" aria-label="Tambah pemasukan">
+                                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100 dark:bg-green-950/30">
+                                            <IconPlus size={14} className="text-green-600 dark:text-green-400" stroke={2.5} />
+                                        </div>
                                         <span>Masuk</span>
                                     </button>
-                                    <button onClick={() => handleAddTransaction('transfer')} className="btn-secondary">
-                                        <IconArrowsExchange size={18} className="text-primary" />
+                                    <button onClick={() => handleAddTransaction('transfer')} className="btn-secondary" aria-label="Tambah transfer">
+                                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10">
+                                            <IconArrowsExchange size={14} className="text-primary" stroke={2.5} />
+                                        </div>
                                         <span>Transfer</span>
                                     </button>
                                 </div>
@@ -304,23 +310,32 @@ function FinancePage() {
                             <div className="grid grid-cols-3 gap-1 sm:gap-2">
                                 <button
                                     onClick={() => handleAddTransaction('expense')}
-                                    className="flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg border border-line bg-surface hover:bg-paper-warm transition-colors text-small"
+                                    className="flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg border border-line bg-surface hover:bg-paper-warm transition-colors text-small min-h-[44px]"
+                                    aria-label="Tambah pengeluaran"
                                 >
-                                    <IconMinus size={16} className="text-red-500 shrink-0" />
+                                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-red-100 dark:bg-red-950/30 shrink-0">
+                                        <IconMinus size={12} className="text-red-600 dark:text-red-400" stroke={2.5} />
+                                    </div>
                                     <span className="truncate">Keluar</span>
                                 </button>
                                 <button
                                     onClick={() => handleAddTransaction('income')}
-                                    className="flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg border border-line bg-surface hover:bg-paper-warm transition-colors text-small"
+                                    className="flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg border border-line bg-surface hover:bg-paper-warm transition-colors text-small min-h-[44px]"
+                                    aria-label="Tambah pemasukan"
                                 >
-                                    <IconPlus size={16} className="text-green-500 shrink-0" />
+                                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100 dark:bg-green-950/30 shrink-0">
+                                        <IconPlus size={12} className="text-green-600 dark:text-green-400" stroke={2.5} />
+                                    </div>
                                     <span className="truncate">Masuk</span>
                                 </button>
                                 <button
                                     onClick={() => handleAddTransaction('transfer')}
-                                    className="flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg border border-line bg-surface hover:bg-paper-warm transition-colors text-small"
+                                    className="flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg border border-line bg-surface hover:bg-paper-warm transition-colors text-small min-h-[44px]"
+                                    aria-label="Tambah transfer"
                                 >
-                                    <IconArrowsExchange size={16} className="text-primary shrink-0" />
+                                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 shrink-0">
+                                        <IconArrowsExchange size={12} className="text-primary" stroke={2.5} />
+                                    </div>
                                     <span className="truncate">Transfer</span>
                                 </button>
                             </div>

@@ -35,7 +35,7 @@ export function PomodoroWidget({
                     <>
                         {/* Timer display */}
                         <div className="text-center py-1 sm:py-4">
-                            <p className="text-[10px] sm:text-tiny text-ink-muted mb-0.5 sm:mb-1">
+                            <p className="text-xs sm:text-tiny text-ink-muted mb-0.5 sm:mb-1">
                                 Fokus
                             </p>
                             <p className="text-body sm:text-h1 font-bold text-ink tabular-nums">
@@ -46,7 +46,7 @@ export function PomodoroWidget({
                         {/* Stop button */}
                         <button
                             onClick={onStop}
-                            className="btn-secondary w-full py-1 sm:py-2 text-[10px] sm:text-small text-red-600"
+                            className="btn-secondary w-full py-1.5 sm:py-2 text-xs sm:text-small text-red-600 min-h-[44px] sm:min-h-0"
                         >
                             Berhenti
                         </button>

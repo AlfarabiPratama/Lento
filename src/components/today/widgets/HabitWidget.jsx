@@ -78,7 +78,7 @@ export function HabitWidget({ habits = [], onCheck, className = '' }) {
                     </div>
 
                     {remaining > 0 && (
-                        <p className="text-[10px] sm:text-small text-ink-muted pl-1 sm:pl-2">
+                        <p className="text-xs sm:text-small text-ink-muted pl-1 sm:pl-2">
                             +{remaining} lainnya
                         </p>
                     )}

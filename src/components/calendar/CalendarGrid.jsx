@@ -76,7 +76,7 @@ function DayCell({ day, isSelected, onClick, importantDate }) {
         >
             {/* Important date icon (top-right corner) */}
             {hasImportant && (
-                <span className="absolute top-0.5 right-0.5 text-[10px] leading-none">
+                <span className="absolute top-0.5 right-0.5 text-xs leading-none" aria-label={importantDate?.label}>
                     {importantDate.icon || '📌'}
                 </span>
             )}

@@ -11,6 +11,8 @@ import { useTodayPomodoro } from '../hooks/usePomodoro'
 import { useCurrentMonthSummary, useAccounts, formatCurrency } from '../hooks/useFinance'
 import { useClockMinute } from '../hooks/useClockMinute'
 import { useBooks } from '../hooks/useBooks'
+import { useToast } from '../contexts/ToastContext'
+import { useCalendarData } from '../hooks/useCalendarData'
 import { PullToRefresh } from '../components/ui/PullToRefresh'
 
 // Intl formatters for Indonesian locale (outside component for performance)
@@ -29,7 +31,9 @@ import { QuestList } from '../features/quests/components/QuestList'
 import ReminderBanner from '../components/reminders/ReminderBanner'
 import PomodoroTimer from '../components/PomodoroTimer'
 import QuickAddTransaction from '../components/QuickAddFinance'
+import { QuickAddHabit } from '../components/today/QuickAddHabit'
 import { CollapsibleSection } from '../components/ui/CollapsibleSection'
+import { WeeklyReport } from '../components/today/WeeklyReport'
 
 // Primary Widgets (main actions)
 import { PrimaryWidgetGrid } from '../components/today/organisms/PrimaryWidgetGrid'
@@ -54,12 +58,20 @@ import { MiniCalendar } from '../components/calendar/MiniCalendar'
 function Today() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { showToast } = useToast()
   const { habits } = useHabits()
   const { checkins, isChecked } = useTodayCheckins()
   const { journals: todayJournals } = useTodayJournals()
   const { sessionCount, focusMinutes } = useTodayPomodoro()
   const { summary: monthSummary, refresh: refreshSummary } = useCurrentMonthSummary()
   const { netWorth } = useAccounts()
+
+  // Calendar data for weekly report
+  const currentDate = new Date()
+  const { activitiesByDate } = useCalendarData(
+    currentDate.getFullYear(),
+    currentDate.getMonth()
+  )
 
   // Clock for header (updates every minute, battery efficient)
   const now = useClockMinute()
@@ -78,6 +90,7 @@ function Today() {
 
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showQuickFinance, setShowQuickFinance] = useState(false)
+  const [showQuickHabit, setShowQuickHabit] = useState(false)
   const [defaultTxType, setDefaultTxType] = useState('expense')
   const [pomodoroBook, setPomodoroBook] = useState(null)
 
@@ -137,6 +150,19 @@ function Today() {
     checked: isChecked(h.id)
   }))
 
+  // Handle quick add habit
+  const { create: createHabit } = useHabits()
+  const handleCreateHabit = async (habitData) => {
+    try {
+      await createHabit(habitData)
+      showToast('success', `Kebiasaan "${habitData.name}" berhasil ditambahkan! 🎯`)
+      setShowQuickHabit(false)
+    } catch (error) {
+      console.error('Failed to create habit:', error)
+      showToast('error', 'Gagal menambahkan kebiasaan')
+    }
+  }
+
   // Pull-to-refresh handler
   const handleRefresh = async () => {
     // Refresh all data sources
@@ -169,6 +195,9 @@ function Today() {
         </p>
       </header>
 
+      {/* Weekly Report - NEW */}
+      <WeeklyReport activitiesByDate={activitiesByDate} />
+
       {/* Pomodoro Timer (when shown) */}
       {showPomodoro && (
         <PomodoroTimer
@@ -186,6 +215,14 @@ function Today() {
           defaultType={defaultTxType}
           onClose={() => setShowQuickFinance(false)}
           onSuccess={handleTransactionSuccess}
+        />
+      )}
+
+      {/* Quick Habit Form (when shown) */}
+      {showQuickHabit && (
+        <QuickAddHabit
+          onClose={() => setShowQuickHabit(false)}
+          onCreate={handleCreateHabit}
         />
       )}
 
@@ -217,7 +254,10 @@ function Today() {
           <p className="text-overline mb-3">Pintasan</p>
           <div className="secondary-strip-container">
             <div className="secondary-strip">
-              <HabitCompact habits={habitsWithState} />
+              <HabitCompact 
+                habits={habitsWithState} 
+                onQuickAdd={() => setShowQuickHabit(true)}
+              />
               <FinanceCompact
                 todayExpense={monthSummary.expense || 0}
                 onQuickAdd={handleAddFinance}

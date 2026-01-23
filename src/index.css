@@ -31,6 +31,16 @@
   --text-body: clamp(0.9375rem, 2vw, 1rem); /* 15px → 16px fluid */
   --text-small: clamp(0.875rem, 1.5vw, 0.9375rem); /* 14px → 15px fluid */
   --text-caption: 0.75rem; /* 12px - labels only, not for reading */
+  --text-icon-label: 0.6875rem; /* 11px - icon labels only, minimal use */
+  
+  /* Mobile-specific overrides for better readability */
+  @media (max-width: 640px) {
+    --text-body: 1rem; /* 16px on mobile - easier to read */
+    --text-small: 0.875rem; /* 14px on mobile - minimum for body text */
+  }
+  
+  /* Ensure minimum touch target sizes */
+  --touch-target-min: 44px; /* iOS HIG & Material Design minimum */
 
   /* Book status colors */
   --status-tbr-bg: rgb(254 252 232);
@@ -124,6 +134,15 @@
     outline: 3px solid var(--lento-primary);
     outline-offset: 2px;
     border-radius: 0.25rem;
+  }
+  
+  /* Enforce minimum text sizes - development warning */
+  @layer utilities {
+    .text-too-small {
+      font-size: 0.625rem !important; /* 10px - below minimum */
+      color: red !important;
+      text-decoration: underline wavy red !important;
+    }
   }
 
   /* Focus within for containers */
@@ -1239,19 +1258,36 @@
    ======================================== */
 
 .calendar-intensity-low {
-  background-color: rgba(var(--color-primary-rgb, 20, 184, 166), 0.1);
+  background-color: rgba(91, 154, 139, 0.2);
 }
 
 .calendar-intensity-mid {
-  background-color: rgba(var(--color-primary-rgb, 20, 184, 166), 0.2);
+  background-color: rgba(91, 154, 139, 0.4);
 }
 
 .calendar-intensity-high {
-  background-color: rgba(var(--color-primary-rgb, 20, 184, 166), 0.35);
+  background-color: rgba(91, 154, 139, 0.6);
 }
 
 .calendar-intensity-max {
-  background-color: rgba(var(--color-primary-rgb, 20, 184, 166), 0.5);
+  background-color: rgba(91, 154, 139, 0.8);
+}
+
+/* Dark mode intensity */
+[data-theme="dark"] .calendar-intensity-low {
+  background-color: rgba(107, 175, 160, 0.2);
+}
+
+[data-theme="dark"] .calendar-intensity-mid {
+  background-color: rgba(107, 175, 160, 0.3);
+}
+
+[data-theme="dark"] .calendar-intensity-high {
+  background-color: rgba(107, 175, 160, 0.5);
+}
+
+[data-theme="dark"] .calendar-intensity-max {
+  background-color: rgba(107, 175, 160, 0.7);
 }
 
 /* ========================================

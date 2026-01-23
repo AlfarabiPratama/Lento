@@ -56,9 +56,6 @@ export default defineConfig({
       /* Anti-aliasing tolerance */
       threshold: 0.2,
       
-      /* Full page screenshots by default */
-      fullPage: false,
-      
       /* Animations disabled for stable screenshots */
       animations: 'disabled',
     },

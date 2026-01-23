@@ -50,3 +50,5 @@ workbox-*.js
 
 # Keep baseline snapshots - commit these to Git!
 # Baseline images are stored in tests/**/*-snapshots/
+.vercel
+.env*.local

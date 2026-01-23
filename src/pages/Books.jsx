@@ -115,9 +115,11 @@ function Books() {
     }
 
     return (
+        <>
         <PullToRefresh onRefresh={handleRefresh}>
-            <div className="w-full min-w-0 space-y-6">{/* Header */}
-            <div className="flex items-center justify-between gap-3">
+            <div className="w-full min-w-0 space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <h1 className="text-h1 text-ink">Library Buku</h1>
                     <p className="text-small text-ink-muted mt-1">
@@ -148,11 +150,19 @@ function Books() {
                     onRefresh={loadBooks}
                 />
             )}
+            </div>
+        </PullToRefresh>
 
             {/* Add Book Form Modal */}
             {showAddForm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-                    <div className="bg-surface rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto scrollbar-hide animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
+                <div 
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+                    onClick={() => setShowAddForm(false)}
+                >
+                    <div 
+                        className="bg-surface rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto scrollbar-hide animate-in zoom-in-95 slide-in-from-bottom-8 duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <h2 className="text-h2 text-ink mb-4">Tambah Buku Baru</h2>
                         <BookForm
                             onSubmit={handleAddBook}
@@ -185,8 +195,7 @@ function Books() {
                 }}
                 onCancel={() => setDuplicateBook(null)}
             />
-        </div>
-        </PullToRefresh>
+        </>
     )
 }
 

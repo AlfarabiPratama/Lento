@@ -38,7 +38,10 @@ export function CreateNotebookModal({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={onClose}
+        >
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-ink/20 backdrop-blur-sm"
@@ -46,7 +49,10 @@ export function CreateNotebookModal({
             />
 
             {/* Modal */}
-            <div className="relative bg-surface rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
+            <div 
+                className="relative bg-surface rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <h2 className="text-h2 text-ink">
@@ -117,6 +123,7 @@ export function CreateNotebookModal({
                                         key={c}
                                         type="button"
                                         onClick={() => setColor(c)}
+                                        aria-label={`Pilih warna ${c}`}
                                         className={`
                       w-8 h-8 rounded-full ${style.light} ${style.border} border-2
                       transition-all

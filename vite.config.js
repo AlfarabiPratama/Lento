@@ -6,13 +6,70 @@ import path from 'path'
 export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1000,
+    // Enable source maps for production debugging (disabled for smaller bundle)
+    sourcemap: false,
+    // Minify with terser for better compression
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+      },
+    },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/messaging'],
-          'ui-vendor': ['@tabler/icons-react'],
+        // Manual chunks for optimal code splitting
+        manualChunks: (id) => {
+          // Core React libraries (loaded on every page)
+          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+            return 'react-vendor';
+          }
+          
+          // Firebase (only loaded when auth/data features used)
+          if (id.includes('firebase')) {
+            return 'firebase-vendor';
+          }
+          
+          // UI icons (used across many pages)
+          if (id.includes('@tabler/icons-react')) {
+            return 'ui-vendor';
+          }
+          
+          // Date utilities (used in calendar, habits, finance)
+          if (id.includes('date-fns')) {
+            return 'date-vendor';
+          }
+          
+          // Analytics & monitoring
+          if (id.includes('@sentry') || id.includes('sentry')) {
+            return 'analytics-vendor';
+          }
+          
+          // Supabase (separate from firebase)
+          if (id.includes('@supabase') || id.includes('supabase')) {
+            return 'supabase-vendor';
+          }
+          
+          // Common utilities shared across features
+          if (id.includes('/src/lib/') && id.includes('/db.js')) {
+            return 'common-db';
+          }
+          
+          // Node modules (vendor chunks)
+          if (id.includes('node_modules')) {
+            return 'vendor-libs';
+          }
         },
+        // Optimize chunk file names for better caching
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId
+            ? chunkInfo.facadeModuleId.split('/').pop()
+            : 'chunk';
+          return `assets/js/${facadeModuleId}-[hash].js`;
+        },
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
     },
   },

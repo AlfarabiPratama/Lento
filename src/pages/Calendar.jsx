@@ -11,7 +11,7 @@
  */
 
 import { useState, useCallback, useMemo, useRef } from 'react'
-import { IconCalendarEvent, IconLayoutGrid, IconLayoutList } from '@tabler/icons-react'
+import { IconCalendarEvent, IconLayoutGrid, IconLayoutList, IconFilter, IconFlame, IconBulb, IconBook, IconNotebook } from '@tabler/icons-react'
 import { CalendarGrid } from '../components/calendar/CalendarGrid'
 import { WeekGrid } from '../components/calendar/WeekGrid'
 import { DayDetail } from '../components/calendar/DayDetail'
@@ -30,6 +30,7 @@ export function Calendar() {
     const [currentDate, setCurrentDate] = useState(today)
     const [selectedDate, setSelectedDate] = useState(null)
     const [slideDirection, setSlideDirection] = useState(null) // 'prev' | 'next' | null
+    const [activeFilter, setActiveFilter] = useState('all') // 'all' | 'habits' | 'focus' | 'journals' | 'books'
 
     // For month view compatibility
     const year = currentDate.getFullYear()
@@ -99,9 +100,28 @@ export function Calendar() {
 
     const selectedActivities = selectedDate ? (activitiesByDate?.[selectedDate] || null) : null
 
+    // Filter activities based on active filter
+    const filteredActivitiesByDate = useMemo(() => {
+        if (!activitiesByDate || activeFilter === 'all') return activitiesByDate
+        
+        return Object.entries(activitiesByDate).reduce((acc, [date, activities]) => {
+            const filtered = {}
+            if (activeFilter === 'habits' && activities.habits?.length > 0) filtered.habits = activities.habits
+            if (activeFilter === 'focus' && activities.focus?.length > 0) filtered.focus = activities.focus
+            if (activeFilter === 'journals' && activities.journals?.length > 0) filtered.journals = activities.journals
+            if (activeFilter === 'books' && activities.books?.length > 0) filtered.books = activities.books
+            
+            // Only include dates that have the filtered activity
+            if (Object.keys(filtered).length > 0) {
+                acc[date] = filtered
+            }
+            return acc
+        }, {})
+    }, [activitiesByDate, activeFilter])
+
     // Calculate summary based on view mode
     const summary = useMemo(() => {
-        if (!activitiesByDate) return { habits: 0, focus: 0, journals: 0, books: 0, activeDays: 0 }
+        if (!filteredActivitiesByDate) return { habits: 0, focus: 0, journals: 0, books: 0, activeDays: 0 }
 
         let habits = 0, focus = 0, journals = 0, books = 0, activeDays = 0
 
@@ -118,7 +138,7 @@ export function Calendar() {
         const startKey = toDateKey(startDate)
         const endKey = toDateKey(endDate)
 
-        Object.entries(activitiesByDate).forEach(([dateKey, activities]) => {
+        Object.entries(filteredActivitiesByDate).forEach(([dateKey, activities]) => {
             if (dateKey >= startKey && dateKey <= endKey) {
                 const hasAny =
                     activities.habits?.length > 0 ||
@@ -135,7 +155,30 @@ export function Calendar() {
         })
 
         return { habits, focus, journals, books, activeDays }
-    }, [activitiesByDate, viewMode, currentDate, year, month])
+    }, [filteredActivitiesByDate, viewMode, currentDate, year, month])
+
+    // Map calendarDays with filtered activities
+    const filteredCalendarDays = useMemo(() => {
+        if (!calendarDays || activeFilter === 'all') return calendarDays
+        
+        return calendarDays.map(day => {
+            const dateKey = day.dateKey || toDateKey(day.date)
+            const filteredActivities = filteredActivitiesByDate?.[dateKey] || {}
+            
+            // Calculate hasActivity based on filtered activities
+            const hasActivity = 
+                (filteredActivities.habits?.length > 0) ||
+                (filteredActivities.focus?.length > 0) ||
+                (filteredActivities.journals?.length > 0) ||
+                (filteredActivities.books?.length > 0)
+            
+            return {
+                ...day,
+                activities: filteredActivities,
+                hasActivity
+            }
+        })
+    }, [calendarDays, filteredActivitiesByDate, activeFilter])
 
     // Check if current view is today
     const isCurrentPeriod = viewMode === VIEW_MODES.MONTH
@@ -210,8 +253,207 @@ export function Calendar() {
                 </div>
             </header>
 
-            {/* Summary Stats */}
-            <div className="grid grid-cols-4 gap-2">
+            {/* Filter Buttons */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                <button
+                    type="button"
+                    onClick={() => setActiveFilter('all')}
+                    className={`btn-sm flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
+                        activeFilter === 'all' 
+                            ? 'bg-primary text-white' 
+                            : 'bg-surface border border-line text-ink hover:bg-primary/10'
+                    }`}
+                >
+                    <IconFilter size={16} />
+                    <span>Semua</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveFilter('habits')}
+                    className={`btn-sm flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
+                        activeFilter === 'habits' 
+                            ? 'bg-primary text-white' 
+                            : 'bg-surface border border-line text-ink hover:bg-primary/10'
+                    }`}
+                >
+                    <IconFlame size={16} />
+                    <span>Habit</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveFilter('focus')}
+                    className={`btn-sm flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
+                        activeFilter === 'focus' 
+                            ? 'bg-info text-white' 
+                            : 'bg-surface border border-line text-ink hover:bg-info/10'
+                    }`}
+                >
+                    <IconBulb size={16} />
+                    <span>Fokus</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveFilter('journals')}
+                    className={`btn-sm flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
+                        activeFilter === 'journals' 
+                            ? 'bg-warning text-white' 
+                            : 'bg-surface border border-line text-ink hover:bg-warning/10'
+                    }`}
+                >
+                    <IconNotebook size={16} />
+                    <span>Jurnal</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveFilter('books')}
+                    className={`btn-sm flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
+                        activeFilter === 'books' 
+                            ? 'bg-purple-500 text-white' 
+                            : 'bg-surface border border-line text-ink hover:bg-purple-500/10'
+                    }`}
+                >
+                    <IconBook size={16} />
+                    <span>Buku</span>
+                </button>
+            </div>
+
+            {/* Desktop: 2-column layout, Mobile: stacked */}
+            <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+                {/* Left Column: Calendar */}
+                <div className="space-y-4">
+                    {/* Calendar Grid with Swipe */}
+                    <div
+                        className={`card ${slideDirection === 'next' ? 'calendar-slide-next' :
+                            slideDirection === 'prev' ? 'calendar-slide-prev' : ''
+                            }`}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                    >
+                        {viewMode === VIEW_MODES.MONTH ? (
+                            <CalendarGrid
+                                year={year}
+                                month={month}
+                                calendarDays={filteredCalendarDays}
+                                selectedDate={selectedDate}
+                                onSelectDate={handleSelectDate}
+                                onPrevMonth={handlePrev}
+                                onNextMonth={handleNext}
+                                onJumpToMonth={handleJumpToMonth}
+                                importantDates={importantDates}
+                            />
+                        ) : (
+                            <WeekGrid
+                                currentDate={currentDate}
+                                activitiesByDate={filteredActivitiesByDate}
+                                selectedDate={selectedDate}
+                                onSelectDate={handleSelectDate}
+                                onPrevWeek={handlePrev}
+                                onNextWeek={handleNext}
+                            />
+                        )}
+                    </div>
+
+                    {/* Day Detail Panel - Mobile only */}
+                    {selectedDate && (
+                        <div className="lg:hidden">
+                            <DayDetail
+                                dateKey={selectedDate}
+                                activities={selectedActivities || { habits: [], focus: [], journals: [], books: [] }}
+                                importantDate={importantDates[selectedDate]}
+                                onClose={() => setSelectedDate(null)}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Right Column: Stats & Info (Desktop only) */}
+                <div className="hidden lg:block space-y-4">
+                    {/* Summary Stats */}
+                    <div className="card">
+                        <h3 className="text-h3 text-ink mb-3">Ringkasan</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-primary/10 rounded-xl p-3 text-center">
+                                <p className="text-h2 text-primary">{summary.habits}</p>
+                                <p className="text-tiny text-ink-muted">Habit</p>
+                            </div>
+                            <div className="bg-info/10 rounded-xl p-3 text-center">
+                                <p className="text-h2 text-info">{summary.focus}</p>
+                                <p className="text-tiny text-ink-muted">Fokus</p>
+                            </div>
+                            <div className="bg-warning/10 rounded-xl p-3 text-center">
+                                <p className="text-h2 text-warning">{summary.journals}</p>
+                                <p className="text-tiny text-ink-muted">Jurnal</p>
+                            </div>
+                            <div className="bg-purple-500/10 rounded-xl p-3 text-center">
+                                <p className="text-h2 text-purple-500">{summary.books}</p>
+                                <p className="text-tiny text-ink-muted">Buku</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Streak Info */}
+                    <div className="card">
+                        <h3 className="text-h3 text-ink mb-3">Statistik</h3>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-body text-ink-muted">Hari Aktif</span>
+                                <span className="text-h3 text-primary">{summary.activeDays}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-body text-ink-muted">Streak Saat Ini</span>
+                                <span className="text-h3 text-warning">{streakData?.currentStreak || 0} 🔥</span>
+                            </div>
+                            {streakData?.longestStreak > 0 && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-body text-ink-muted">Streak Terpanjang</span>
+                                    <span className="text-h3 text-ink">{streakData.longestStreak}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Heatmap Legend */}
+                    <div className="card">
+                        <h3 className="text-h3 text-ink mb-3">Intensitas</h3>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-small">
+                                <span className="text-ink-muted">Tidak ada</span>
+                                <div className="w-6 h-6 rounded border border-line bg-surface"></div>
+                            </div>
+                            <div className="flex items-center justify-between text-small">
+                                <span className="text-ink-muted">1-2 aktivitas</span>
+                                <div className="w-6 h-6 rounded bg-primary/20"></div>
+                            </div>
+                            <div className="flex items-center justify-between text-small">
+                                <span className="text-ink-muted">3-4 aktivitas</span>
+                                <div className="w-6 h-6 rounded bg-primary/40"></div>
+                            </div>
+                            <div className="flex items-center justify-between text-small">
+                                <span className="text-ink-muted">5-6 aktivitas</span>
+                                <div className="w-6 h-6 rounded bg-primary/60"></div>
+                            </div>
+                            <div className="flex items-center justify-between text-small">
+                                <span className="text-ink-muted">7+ aktivitas</span>
+                                <div className="w-6 h-6 rounded bg-primary/80"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Day Detail Panel - Desktop */}
+                    {selectedDate && (
+                        <DayDetail
+                            dateKey={selectedDate}
+                            activities={selectedActivities || { habits: [], focus: [], journals: [], books: [] }}
+                            importantDate={importantDates[selectedDate]}
+                            onClose={() => setSelectedDate(null)}
+                        />
+                    )}
+                </div>
+            </div>
+
+            {/* Mobile: Summary Stats (below calendar) */}
+            <div className="lg:hidden grid grid-cols-4 gap-2">
                 <div className="bg-primary/10 rounded-xl p-3 text-center">
                     <p className="text-h2 text-primary">{summary.habits}</p>
                     <p className="text-tiny text-ink-muted">Habit</p>
@@ -230,51 +472,8 @@ export function Calendar() {
                 </div>
             </div>
 
-            {/* Calendar Grid with Swipe */}
-            <div
-                className={`card ${slideDirection === 'next' ? 'calendar-slide-next' :
-                    slideDirection === 'prev' ? 'calendar-slide-prev' : ''
-                    }`}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-            >
-                {viewMode === VIEW_MODES.MONTH ? (
-                    <CalendarGrid
-                        year={year}
-                        month={month}
-                        calendarDays={calendarDays}
-                        selectedDate={selectedDate}
-                        onSelectDate={handleSelectDate}
-                        onPrevMonth={handlePrev}
-                        onNextMonth={handleNext}
-                        onJumpToMonth={handleJumpToMonth}
-                        importantDates={importantDates}
-                    />
-                ) : (
-                    <WeekGrid
-                        currentDate={currentDate}
-                        activitiesByDate={activitiesByDate}
-                        selectedDate={selectedDate}
-                        onSelectDate={handleSelectDate}
-                        onPrevWeek={handlePrev}
-                        onNextWeek={handleNext}
-                    />
-                )}
-            </div>
-
-            {/* Day Detail Panel */}
-            {selectedDate && (
-                <DayDetail
-                    dateKey={selectedDate}
-                    activities={selectedActivities || { habits: [], focus: [], journals: [], books: [] }}
-                    importantDate={importantDates[selectedDate]}
-                    onClose={() => setSelectedDate(null)}
-                />
-            )}
-
-            {/* Bottom Stats */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Mobile: Bottom Stats */}
+            <div className="lg:hidden grid grid-cols-2 gap-3">
                 <div className="card text-center py-4">
                     <p className="text-h1 text-primary">{summary.activeDays}</p>
                     <p className="text-tiny text-ink-muted">

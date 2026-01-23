@@ -192,8 +192,14 @@ export function AddBillForm({ onSuccess, onCancel }) {
 
             {/* Contextual Permission Modal */}
             {showPermissionPrompt && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+                <div 
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    onClick={onCancel}
+                >
+                    <div 
+                        className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="text-center">
                             <div className="text-5xl mb-3">🔔</div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2">

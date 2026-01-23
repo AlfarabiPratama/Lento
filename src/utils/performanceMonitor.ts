@@ -15,7 +15,7 @@ interface PerformanceMetric {
  * Send performance metrics to backend analytics
  */
 const sendToAnalytics = (metric: PerformanceMetric): void => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (import.meta.env.MODE !== 'production') {
     console.log('[Performance]', metric);
     return;
   }
@@ -208,3 +208,40 @@ export const initPerformanceMonitoring = (): void => {
   measurePerformance();
   measureResourceTiming();
 };
+
+/**
+ * Track custom page load time (for SPA navigation)
+ */
+export function trackPageLoad(pageName: string): void {
+  const startMark = `page-${pageName}-start`;
+  const endMark = `page-${pageName}-end`;
+  const measureName = `page-${pageName}-load`;
+
+  try {
+    // Start timing
+    performance.mark(startMark);
+
+    // End timing when page is interactive
+    requestIdleCallback(() => {
+      performance.mark(endMark);
+      performance.measure(measureName, startMark, endMark);
+
+      const measure = performance.getEntriesByName(measureName)[0];
+
+      sendToAnalytics({
+        metric: `PageLoad-${pageName}`,
+        value: measure.duration,
+        rating: measure.duration < 1000 ? 'good' : measure.duration < 3000 ? 'needs-improvement' : 'poor',
+        url: window.location.pathname,
+        timestamp: Date.now(),
+      });
+
+      // Cleanup
+      performance.clearMarks(startMark);
+      performance.clearMarks(endMark);
+      performance.clearMeasures(measureName);
+    });
+  } catch (error) {
+    console.warn('Page load tracking failed:', error);
+  }
+}

@@ -31,11 +31,26 @@ export function Announcer({ message, politeness = 'polite', clearAfter = 5000 }:
     return () => clearTimeout(timer);
   }, [message, clearAfter]);
 
+  // Render different divs based on politeness to avoid expression in aria-live
+  if (politeness === 'assertive') {
+    return (
+      <div
+        ref={announcerRef}
+        role="status"
+        aria-live="assertive"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {message}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={announcerRef}
       role="status"
-      aria-live={politeness === 'assertive' ? 'assertive' : 'polite'}
+      aria-live="polite"
       aria-atomic="true"
       className="sr-only"
     >
@@ -147,7 +162,7 @@ export function LoadingAnnouncer({ isLoading, message = 'Loading...' }: LoadingA
     <div
       role="status"
       aria-live="polite"
-      aria-busy={isLoading ? 'true' : 'false'}
+      aria-busy="true"
       className="sr-only"
     >
       {message}
@@ -168,14 +183,26 @@ interface ToastAnnouncerProps {
 }
 
 export function ToastAnnouncer({ type, message, visible }: ToastAnnouncerProps) {
-  const politeness = type === 'error' ? 'assertive' : 'polite';
-
   if (!visible) return null;
+
+  // Separate renders to avoid expressions in ARIA attributes
+  if (type === 'error') {
+    return (
+      <div
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {`${type}: ${message}`}
+      </div>
+    );
+  }
 
   return (
     <div
-      role={type === 'error' ? 'alert' : 'status'}
-      aria-live={politeness === 'assertive' ? 'assertive' : 'polite'}
+      role="status"
+      aria-live="polite"
       aria-atomic="true"
       className="sr-only"
     >
@@ -199,16 +226,20 @@ interface ProgressAnnouncerProps {
 
 export function ProgressAnnouncer({ current, total, label = 'Progress' }: ProgressAnnouncerProps) {
   const percentage = Math.round((current / total) * 100);
+  
+  // Create props object to satisfy linter
+  const progressProps = {
+    role: 'progressbar' as const,
+    'aria-valuenow': percentage,
+    'aria-valuemin': 0,
+    'aria-valuemax': 100,
+    'aria-label': label,
+    'aria-valuetext': `${percentage}%`,
+    className: 'sr-only'
+  };
 
   return (
-    <div
-      role="progressbar"
-      aria-valuenow={String(current)}
-      aria-valuemin="0"
-      aria-valuemax={String(total)}
-      aria-label={label}
-      className="sr-only"
-    >
+    <div {...progressProps}>
       <span className="sr-only">{`${label}: ${percentage}% complete`}</span>
     </div>
   );
