@@ -49,15 +49,8 @@ export default function PWAUpdatePrompt() {
       })
     })
 
-    // Listen for controller change (service worker activated)
-    let refreshing = false
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) {
-        console.log('PWA: Controller changed, reloading page')
-        refreshing = true
-        window.location.reload()
-      }
-    })
+    // DON'T listen for controllerchange - it causes auto-reload
+    // We'll manually reload only when user clicks Update button
   }, [])
 
   const handleUpdate = () => {
@@ -66,13 +59,19 @@ export default function PWAUpdatePrompt() {
       return
     }
 
-    console.log('PWA: Activating new service worker')
+    console.log('PWA: User accepted update, activating new service worker')
     
     // Tell service worker to skip waiting and activate immediately
     waitingWorker.postMessage({ type: 'SKIP_WAITING' })
     
-    // Hide prompt
+    // Hide prompt first
     setShowUpdatePrompt(false)
+    
+    // Wait a moment for SW to activate, then reload
+    setTimeout(() => {
+      console.log('PWA: Reloading to use new service worker')
+      window.location.reload()
+    }, 500)
   }
 
   const handleDismiss = () => {
