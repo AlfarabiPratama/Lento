@@ -52,6 +52,9 @@ export function TxnSheet({
     const [error, setError] = useState('')
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < BREAKPOINTS.mobile : false)
 
+    // Track if we're in edit mode with existing data
+    const isEditingWithCategory = mode === 'edit' && initialData.category_id
+
     // Reset form when initialData changes (switching between create/edit)
     useEffect(() => {
         if (open) {
@@ -99,6 +102,12 @@ export function TxnSheet({
             return
         }
 
+        // Skip auto-selection if editing with existing category
+        // Let the initialData useEffect handle it
+        if (isEditingWithCategory && categoryId === initialData.category_id) {
+            return
+        }
+
         if (filteredCategories.length > 0) {
             const lastCategoryId = localStorage.getItem(`lento_last_category_${type}`)
             const validCat = filteredCategories.find(c => c.value === lastCategoryId)
@@ -106,7 +115,7 @@ export function TxnSheet({
         } else {
             setCategoryId('')
         }
-    }, [type, filteredCategories])
+    }, [type, filteredCategories, isEditingWithCategory, categoryId, initialData.category_id])
 
     const handleSubmit = async (e) => {
         e?.preventDefault()
