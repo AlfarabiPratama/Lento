@@ -138,7 +138,7 @@ export function TxnSheet({
                 account_id: accountId,
                 to_account_id: type === 'transfer' ? toAccountId : null,
                 category_id: type !== 'transfer' ? categoryId : null,
-                date: date ? new Date(date).toISOString() : new Date().toISOString(),
+                date: date || new Date().toISOString().split('T')[0],
                 payment_method: paymentMethod || null,
                 merchant: merchant || null,
                 note: note || null,
