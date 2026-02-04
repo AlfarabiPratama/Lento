@@ -51,12 +51,27 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   };
 
   const handleTouchMove = (e: TouchEvent) => {
-    if (disabled || refreshing || window.scrollY > 0) return;
+    if (disabled || refreshing) return;
+
+    // Check if we're at the top of scroll
+    const isAtTop = window.scrollY === 0 && 
+                    (!containerRef.current || containerRef.current.scrollTop === 0);
+
+    // If not at top, reset and allow normal scroll
+    if (!isAtTop) {
+      startY.current = 0;
+      setPulling(false);
+      setPullDistance(0);
+      return;
+    }
+
+    // Only proceed if we have a valid startY (user touched at top)
+    if (startY.current === 0) return;
 
     const currentY = e.touches[0].clientY;
     const distance = currentY - startY.current;
 
-    // Only pull down
+    // Only pull down, and only if distance is meaningful
     if (distance > 0) {
       setPulling(true);
       // Apply resistance effect: the further you pull, the harder it gets
@@ -64,7 +79,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       const easedDistance = resistance * 0.5; // 50% resistance
       setPullDistance(easedDistance);
 
-      // Prevent default scroll if pulling
+      // Only prevent default if we're actively pulling (past threshold)
       if (distance > 10) {
         e.preventDefault();
       }
