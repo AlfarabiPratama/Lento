@@ -92,18 +92,21 @@ export function TxnSheet({
         }
     }, [accounts, accountId])
 
+    // Reset & set default category when type changes
     useEffect(() => {
-        if (filteredCategories.length > 0 && !categoryId && type !== 'transfer') {
+        if (type === 'transfer') {
+            setCategoryId('')
+            return
+        }
+
+        if (filteredCategories.length > 0) {
             const lastCategoryId = localStorage.getItem(`lento_last_category_${type}`)
             const validCat = filteredCategories.find(c => c.value === lastCategoryId)
             setCategoryId(validCat ? validCat.value : filteredCategories[0].value)
+        } else {
+            setCategoryId('')
         }
-    }, [filteredCategories, categoryId, type])
-
-    // Reset category when type changes
-    useEffect(() => {
-        setCategoryId('')
-    }, [type])
+    }, [type, filteredCategories])
 
     const handleSubmit = async (e) => {
         e?.preventDefault()
