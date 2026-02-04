@@ -40,7 +40,9 @@ function registerValidSW(swUrl, config) {
       
       // Best Practice: Check for updates setiap 1 jam
       setInterval(() => {
-        registration.update()
+        registration.update().catch(err => {
+          console.warn('[SW] Update check failed:', err)
+        })
       }, 1000 * 60 * 60)
 
       registration.onupdatefound = () => {
@@ -70,6 +72,10 @@ function registerValidSW(swUrl, config) {
     })
     .catch((error) => {
       console.error('[SW] Error during service worker registration:', error)
+      // Don't throw - just log. SW failures shouldn't break the app
+      if (config && config.onError) {
+        config.onError(error)
+      }
     })
 }
 

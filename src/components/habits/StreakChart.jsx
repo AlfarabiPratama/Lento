@@ -7,7 +7,7 @@
  * - Current streak highlight
  */
 
-import { IconFlame, IconTrendingUp, IconTrendingDown } from '@tabler/icons-react'
+import { IconFlame, IconTrendingUp, IconTrendingDown, IconTrophy } from '@tabler/icons-react'
 
 /**
  * Calculate daily streak for last N days
@@ -195,7 +195,7 @@ export function StreakHistory({ streakHistory, longestStreak }) {
                                     })}
                                 </span>
                                 <div className="flex items-center gap-1.5">
-                                    {isLongest && <span className="text-tiny">🏆</span>}
+                                    {isLongest && <IconTrophy size={14} className="text-warning" />}
                                     <span className="text-ink font-medium">{streak.length} hari</span>
                                 </div>
                             </div>

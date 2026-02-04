@@ -7,10 +7,17 @@ import {
     IconCalendar,
     IconCheck,
     IconChartBar,
+    IconBulb,
+    IconSparkles,
+    IconThumbUp,
+    IconBolt,
+    IconTrophy,
+    IconTarget,
 } from '@tabler/icons-react'
 import { getDetailedHabitStats } from '../lib/habitStats'
 import { useToast } from '../contexts/ToastContext'
 import { StreakMiniChart, StreakHistory, StreakTrend } from '../components/habits/StreakChart'
+import { CheckInHistory } from '../components/habits/CheckInHistory'
 
 /**
  * HabitDetail - Detailed statistics and insights for a habit
@@ -245,6 +252,13 @@ function HabitDetail() {
                 </section>
             )}
 
+            {/* Check-in History with Notes */}
+            {stats.checkins && stats.checkins.length > 0 && (
+                <section className="card">
+                    <CheckInHistory checkins={stats.checkins} />
+                </section>
+            )}
+
             {/* Day of Week Analysis */}
             <section className="card">
                 <div className="flex items-center gap-2 mb-4">
@@ -307,25 +321,46 @@ function HabitDetail() {
 
             {/* Insights */}
             <section className="card bg-gradient-to-br from-primary/5 to-success/5">
-                <h2 className="text-h2 text-ink mb-3">💡 Insights</h2>
+                <h2 className="text-h2 text-ink mb-3 flex items-center gap-2">
+                    <IconBulb size={24} className="text-primary" />
+                    Insights
+                </h2>
                 <div className="space-y-2 text-small text-ink">
                     {overview.completionRate >= 80 && (
-                        <p>✨ Konsistensi luar biasa! Terus pertahankan ritme ini.</p>
+                        <p className="flex items-start gap-2">
+                            <IconSparkles size={18} className="text-primary flex-shrink-0 mt-0.5" />
+                            <span>Konsistensi luar biasa! Terus pertahankan ritme ini.</span>
+                        </p>
                     )}
                     {overview.completionRate >= 50 && overview.completionRate < 80 && (
-                        <p>👍 Progres bagus! Sedikit lagi untuk mencapai 80%.</p>
+                        <p className="flex items-start gap-2">
+                            <IconThumbUp size={18} className="text-success flex-shrink-0 mt-0.5" />
+                            <span>Progres bagus! Sedikit lagi untuk mencapai 80%.</span>
+                        </p>
                     )}
                     {overview.completionRate < 50 && (
-                        <p>💪 Terus semangat! Setiap langkah kecil berarti.</p>
+                        <p className="flex items-start gap-2">
+                            <IconBolt size={18} className="text-secondary flex-shrink-0 mt-0.5" />
+                            <span>Terus semangat! Setiap langkah kecil berarti.</span>
+                        </p>
                     )}
                     {overview.currentStreak >= 7 && (
-                        <p>🔥 Streak 1 minggu! Momentum yang sempurna.</p>
+                        <p className="flex items-start gap-2">
+                            <IconFlame size={18} className="text-danger flex-shrink-0 mt-0.5" />
+                            <span>Streak 1 minggu! Momentum yang sempurna.</span>
+                        </p>
                     )}
                     {overview.currentStreak >= 30 && (
-                        <p>🏆 Streak 1 bulan! Kebiasaan ini sudah melekat.</p>
+                        <p className="flex items-start gap-2">
+                            <IconTrophy size={18} className="text-warning flex-shrink-0 mt-0.5" />
+                            <span>Streak 1 bulan! Kebiasaan ini sudah melekat.</span>
+                        </p>
                     )}
                     {overview.totalCheckins >= 100 && (
-                        <p>🎯 Milestone 100 check-ins tercapai!</p>
+                        <p className="flex items-start gap-2">
+                            <IconTarget size={18} className="text-primary flex-shrink-0 mt-0.5" />
+                            <span>Milestone 100 check-ins tercapai!</span>
+                        </p>
                     )}
                 </div>
             </section>

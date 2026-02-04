@@ -18,21 +18,39 @@ export async function requestNotificationPermission() {
   }
 }
 
-export function showLocalNotification(title, options = {}) {
+export async function showLocalNotification(title, options = {}) {
   if (!isNotificationSupported()) return null
   if (Notification.permission !== 'granted') return null
-  const notification = new Notification(title, {
-    icon: '/pwa-192.png',
-    badge: '/pwa-192.png',
-    ...options,
-  })
-
-  // Navigate to route if provided
-  if (options.data?.route) {
-    notification.onclick = () => {
-      window.focus()
-      window.location.href = options.data.route
+  
+  try {
+    // Always try Service Worker API first (PWA requirement)
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.ready
+      await registration.showNotification(title, {
+        icon: '/pwa-192.png',
+        badge: '/pwa-192.png',
+        ...options,
+      })
+      return true
     }
+    
+    // Only use legacy API if Service Worker not supported at all
+    const notification = new Notification(title, {
+      icon: '/pwa-192.png',
+      badge: '/pwa-192.png',
+      ...options,
+    })
+
+    // Navigate to route if provided
+    if (options.data?.route) {
+      notification.onclick = () => {
+        window.focus()
+        window.location.href = options.data.route
+      }
+    }
+    return notification
+  } catch (error) {
+    console.error('Failed to show notification:', error)
+    return null
   }
-  return notification
 }

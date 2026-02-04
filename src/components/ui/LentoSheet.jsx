@@ -34,60 +34,54 @@ export function LentoSheet({
     if (!open) return null
 
     return (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Overlay */}
             <div
                 className="absolute inset-0 bg-black/30 animate-fade-in"
                 onClick={onClose}
-                aria-label="Tutup"
+                role="presentation"
             />
 
-            {/* Sheet container */}
-            <div className="absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-4">
-                <div
-                    ref={panelRef}
-                    tabIndex={-1}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label={title}
-                    className={`
-            w-full bg-[var(--lento-surface)] shadow-2xl
-            rounded-t-3xl border border-[var(--lento-border)]
-            max-w-[var(--sheet-max-w)]
-            outline-none lento-focus animate-slide-up
-            max-h-[90vh] overflow-y-auto
-            ${className}
-          `}
-                >
-                    {/* Drag handle (visual only) */}
-                    <div className="flex justify-center pt-3">
-                        <div className="h-1.5 w-12 rounded-full bg-black/10" />
-                    </div>
+            {/* Sheet panel - centered */}
+            <div
+                ref={panelRef}
+                tabIndex={-1}
+                role="dialog"
+                aria-modal="true"
+                aria-label={title}
+                style={{ maxWidth: '640px' }}
+                className={`
+          relative w-full bg-surface shadow-2xl
+          rounded-2xl border border-line
+          outline-none focus:outline-primary focus:outline-2 focus:outline-offset-2
+          animate-scale-in
+          max-h-[85vh] overflow-y-auto
+          ${className}
+        `}
+            >
+                {/* Header */}
+                <header className="flex items-center justify-between px-5 py-4 border-b border-line">
+                    <h2 className="text-base font-semibold text-ink">
+                        {title}
+                    </h2>
+                    {/* Close - 48x48 tap target (MANDATORY) */}
+                    <button
+                        onClick={onClose}
+                        className="min-w-[44px] min-h-[44px] -mr-2 inline-flex items-center justify-center rounded-full hover:bg-black/5 focus:outline-primary focus:outline-2 focus:outline-offset-2 transition-colors"
+                        aria-label="Tutup"
+                        type="button"
+                    >
+                        <IconX size={20} stroke={1.5} />
+                    </button>
+                </header>
 
-                    {/* Header */}
-                    <header className="flex items-center justify-between px-5 py-3">
-                        <h2 className="text-base font-semibold text-[var(--lento-text)]">
-                            {title}
-                        </h2>
-                        {/* Close - 48x48 tap target (MANDATORY) */}
-                        <button
-                            onClick={onClose}
-                            className="tap-target -mr-2 inline-flex items-center justify-center rounded-full hover:bg-black/5 lento-focus"
-                            aria-label="Tutup"
-                            type="button"
-                        >
-                            <IconX size={20} stroke={1.5} />
-                        </button>
-                    </header>
+                {/* Content */}
+                <div className="px-5 py-4">{children}</div>
 
-                    {/* Content */}
-                    <div className="px-5 pb-4">{children}</div>
-
-                    {/* Footer */}
-                    {footer && (
-                        <footer className="px-5 pb-5 pb-safe">{footer}</footer>
-                    )}
-                </div>
+                {/* Footer */}
+                {footer && (
+                    <footer className="px-5 pb-5 border-t border-line pt-4">{footer}</footer>
+                )}
             </div>
         </div>
     )

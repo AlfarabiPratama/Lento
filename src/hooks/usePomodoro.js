@@ -3,6 +3,9 @@ import * as pomodoro from '../lib/pomodoro'
 import { createSession as createBookSession } from '../lib/bookSessionsRepo'
 import { getBookById, updateBook } from '../lib/booksRepo'
 import { requestWakeLock, releaseWakeLock, handleVisibilityChange } from '../lib/wakeLock'
+import { useAuth } from './useAuth'
+import { db } from '../lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
 
 /**
  * Hook for Pomodoro settings
@@ -57,6 +60,7 @@ export function useTodayPomodoro() {
  */
 export function usePomodoroTimer() {
     const { settings } = usePomodoroSettings()
+    const { user } = useAuth()
     const { refresh: refreshStats } = useTodayPomodoro()
 
     const [isRunning, setIsRunning] = useState(false)
@@ -177,17 +181,82 @@ export function usePomodoroTimer() {
         setIsPaused(false)
         setCurrentSession(null)
 
-        // Optional: play notification sound
-        if ('Notification' in window && Notification.permission === 'granted') {
+        // Fetch notification settings from Firestore (only when needed)
+        let notificationSettings = null
+        if (user?.uid) {
+            try {
+                const docRef = doc(db, 'notification_settings', user.uid)
+                const docSnap = await getDoc(docRef)
+                if (docSnap.exists()) {
+                    notificationSettings = docSnap.data()
+                }
+            } catch (error) {
+                console.error('Failed to fetch notification settings:', error)
+            }
+        }
+
+        // Default to enabled if no settings found
+        const pomodoroEnabled = notificationSettings?.pomodoroNotifications?.enabled ?? true
+        const workCompleteEnabled = notificationSettings?.pomodoroNotifications?.workComplete ?? true
+        const breakCompleteEnabled = notificationSettings?.pomodoroNotifications?.breakComplete ?? true
+
+        // Check if should show notification based on user settings
+        const shouldNotify = pomodoroEnabled &&
+            ((mode === 'work' && workCompleteEnabled) ||
+             (mode === 'break' && breakCompleteEnabled))
+
+        // Check quiet hours
+        const isQuietHours = () => {
+            if (!notificationSettings?.quietHours?.enabled) return false
+            
+            const now = new Date()
+            const hour = now.getHours()
+            const minute = now.getMinutes()
+            const currentTime = hour * 60 + minute
+            
+            try {
+                const [startHour, startMinute] = notificationSettings.quietHours.startTime.split(':').map(Number)
+                const [endHour, endMinute] = notificationSettings.quietHours.endTime.split(':').map(Number)
+                const startTime = startHour * 60 + startMinute
+                const endTime = endHour * 60 + endMinute
+                
+                // Handle overnight quiet hours (e.g., 22:00 - 08:00)
+                if (startTime > endTime) {
+                    return currentTime >= startTime || currentTime < endTime
+                }
+                return currentTime >= startTime && currentTime < endTime
+            } catch (error) {
+                console.error('Failed to parse quiet hours:', error)
+                return false
+            }
+        }
+
+        // Optional: play notification sound (only if enabled and not in quiet hours)
+        if (shouldNotify && !isQuietHours() && 'Notification' in window && Notification.permission === 'granted') {
             const body = mode === 'work'
                 ? `Sesi selesai! ${currentSession?.session_mode === 'reading' ? 'Progress buku tercatat.' : ''} Waktunya istirahat.`
                 : 'Break selesai! Siap fokus lagi?'
-            new Notification('Lento', {
-                body,
-                icon: '/Lento_Logo_Pack_Calm_v1/png/lento_icon_192.png'
-            })
+            
+            try {
+                // Always try Service Worker API first (PWA requirement)
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.ready
+                    await registration.showNotification('Lento', {
+                        body,
+                        icon: '/Lento_Logo_Pack_Calm_v1/png/lento_icon_192.png'
+                    })
+                } else {
+                    // Only use legacy API if Service Worker not supported at all
+                    new Notification('Lento', {
+                        body,
+                        icon: '/Lento_Logo_Pack_Calm_v1/png/lento_icon_192.png'
+                    })
+                }
+            } catch (error) {
+                console.error('Failed to show notification:', error)
+            }
         }
-    }, [mode, currentSession, sessionsCompleted, settings, refreshStats])
+    }, [mode, currentSession, sessionsCompleted, settings, refreshStats, user?.uid])
 
     // Start timer
     const start = useCallback(async (label = '', book = null) => {

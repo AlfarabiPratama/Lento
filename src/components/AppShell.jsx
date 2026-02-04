@@ -24,17 +24,19 @@ import { SoundFab } from '../features/soundscapes/SoundFab'
 import { SoundPanel } from '../features/soundscapes/SoundPanel'
 import { useHabits, useTodayCheckins } from '../hooks/useHabits'
 import { useHabitReminders } from '../hooks/useHabitReminders'
+import { useScrollDirection } from '../hooks/useScrollDirection'
 import { HabitReminderToast } from './reminders/HabitReminderToast'
 import { PWAInstallPrompt } from './pwa/PWAInstallPrompt'
 import { OfflineIndicator } from './pwa/OfflineIndicator'
 import { SkipToContent } from './a11y/FocusManagement'
 
-// Mobile navigation items - includes More
+// Mobile navigation items - includes Search and More
 const mobileNavItems = [
   { path: '/', label: 'Hari Ini', icon: IconSun },
   { path: '/habits', label: 'Kebiasaan', icon: IconRepeat },
   { path: '/journal', label: 'Jurnal', icon: IconNotebook },
   { path: '/space', label: 'Ruang', icon: IconFileText },
+  { type: 'button', label: 'Cari', icon: IconSearch, action: 'search' }, // Search button
   { path: '/more', label: 'Lainnya', icon: IconSettings },
 ]
 
@@ -58,6 +60,7 @@ function AppShell({ children }) {
   const { habits } = useHabits()
   const { checkIn } = useTodayCheckins()
   const [activeReminder, setActiveReminder] = useState(null)
+  const scrollDirection = useScrollDirection(10)
 
   // Initialize habit reminders - check every minute
   useHabitReminders(habits, (habit) => {
@@ -152,22 +155,10 @@ function AppShell({ children }) {
 
       {/* Main content */}
       <div className={`flex-1 flex flex-col min-h-[100dvh] transition-all duration-200 ${navCollapsed ? 'lg:ml-[72px]' : 'lg:ml-60'}`}>
-        {/* Mobile header */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-line bg-surface/95 backdrop-blur-sm sticky top-0 z-20">
-          <div className="flex items-center gap-3">
-            <LentoLettermarkAnimated size="default" />
-            <span className="text-h3 text-ink font-semibold">Lento</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={openSearch}
-              className="min-w-11 min-h-11 flex items-center justify-center rounded-lg text-ink-muted hover:bg-paper-warm hover:text-ink transition-all"
-              aria-label="Cari"
-            >
-              <IconSearch size={22} stroke={2} />
-            </button>
-            <SyncIndicator compact />
-          </div>
+        {/* Mobile header - HIDDEN to save space, search accessible via bottom nav */}
+        <header className="hidden">
+          {/* Header completely hidden on mobile for maximum content space */}
+          {/* Logo and search accessible through desktop sidebar and bottom nav */}
         </header>
 
         {/* Page content */}
@@ -178,7 +169,7 @@ function AppShell({ children }) {
           role="main"
           aria-label="Main content"
         >
-          <div className="w-full max-w-full lg:max-w-content lg:mx-auto px-4 py-5 lg:px-6 lg:py-6 overflow-x-hidden">
+          <div className="w-full lg:max-w-content mx-auto px-3 sm:px-4 py-5 lg:px-6 lg:py-6">
             {children}
           </div>
         </main>
@@ -189,8 +180,25 @@ function AppShell({ children }) {
           role="navigation"
           aria-label="Mobile navigation"
         >
-          {mobileNavItems.map((item) => {
+          {mobileNavItems.map((item, index) => {
             const Icon = item.icon
+            
+            // Handle search button (type: button)
+            if (item.type === 'button' && item.action === 'search') {
+              return (
+                <button
+                  key={`${item.label}-${index}`}
+                  onClick={openSearch}
+                  className="flex flex-col items-center gap-1 py-1.5 px-2 min-w-[56px] rounded-lg transition-all duration-normal text-ink-muted active:bg-paper-warm"
+                  aria-label={item.label}
+                >
+                  <Icon size={24} stroke={2} />
+                  <span className="text-tiny font-medium">{item.label}</span>
+                </button>
+              )
+            }
+            
+            // Handle regular nav links
             return (
               <NavLink
                 key={item.path}

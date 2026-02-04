@@ -62,6 +62,7 @@ export async function getDetailedHabitStats(habitId, days = 90) {
         },
         heatmap: heatmapData,
         streakHistory: streakData,
+        checkins: sortedCheckins, // Include check-ins with notes
     }
 }
 

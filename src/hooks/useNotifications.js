@@ -112,7 +112,7 @@ export const useNotifications = (userId) => {
     useEffect(() => {
         if (!messaging) return
 
-        const unsubscribe = onMessage(messaging, (payload) => {
+        const unsubscribe = onMessage(messaging, async (payload) => {
             console.log('[FCM] Foreground message:', payload)
 
             const { notification, data } = payload
@@ -128,7 +128,18 @@ export const useNotifications = (userId) => {
                     requireInteraction: data?.type === 'bill_reminder'
                 }
 
-                new Notification(notification.title, notificationOptions)
+                try {
+                    // Always try Service Worker API first (PWA requirement)
+                    if ('serviceWorker' in navigator) {
+                        const registration = await navigator.serviceWorker.ready
+                        await registration.showNotification(notification.title, notificationOptions)
+                    } else {
+                        // Only use legacy API if Service Worker not supported at all
+                        new Notification(notification.title, notificationOptions)
+                    }
+                } catch (error) {
+                    console.error('[FCM] Failed to show notification:', error)
+                }
             }
         })
 

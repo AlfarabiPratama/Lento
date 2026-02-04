@@ -8,6 +8,9 @@ import { useState } from 'react'
 import { useNotifications } from '../hooks/useNotifications'
 import { useAuth } from '../hooks/useAuth'
 import { useBills } from '../hooks/useBills'
+import { useFormValidation } from '../../../hooks/useFormValidation'
+import { FormField } from '../../ui/FormField'
+import { billSchema } from '../../../lib/validationSchemas'
 
 export function AddBillForm({ onSuccess, onCancel }) {
     const { user } = useAuth()
@@ -15,52 +18,52 @@ export function AddBillForm({ onSuccess, onCancel }) {
     const { createBill } = useBills()
     
     const [showPermissionPrompt, setShowPermissionPrompt] = useState(false)
-    const [loading, setLoading] = useState(false)
-    
-    const [formData, setFormData] = useState({
-        name: '',
-        amount: '',
-        dueDate: '',
-        category: 'utilities',
-        recurring: false,
-        recurringInterval: 'monthly',
-        notes: ''
-    })
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        setLoading(true)
+    // Form validation
+    const {
+        values,
+        errors,
+        touched,
+        handleChange,
+        handleBlur,
+        handleSubmit,
+        resetForm,
+        isSubmitting,
+    } = useFormValidation({
+        initialValues: {
+            name: '',
+            amount: '',
+            dueDate: '',
+            category: 'utilities',
+            recurring: false,
+            recurringInterval: 'monthly',
+            notes: ''
+        },
+        validationSchema: billSchema,
+        onSubmit: async (formValues) => {
+            try {
+                // Convert amount to number
+                const billData = {
+                    ...formValues,
+                    amount: parseFloat(formValues.amount)
+                }
 
-        try {
-            // Add bill to Firestore
-            await createBill(formData)
+                await createBill(billData)
 
-            // CONTEXTUAL permission request (after value shown)
-            if (permission !== 'granted') {
-                setShowPermissionPrompt(true)
-            } else {
-                // Success feedback
-                if (onSuccess) onSuccess()
+                // CONTEXTUAL permission request (after value shown)
+                if (permission !== 'granted') {
+                    setShowPermissionPrompt(true)
+                } else {
+                    if (onSuccess) onSuccess()
+                }
+
+                resetForm()
+            } catch (error) {
+                console.error('Error adding bill:', error)
+                throw error
             }
-
-            // Reset form
-            setFormData({
-                name: '',
-                amount: '',
-                dueDate: '',
-                category: 'utilities',
-                recurring: false,
-                recurringInterval: 'monthly',
-                notes: ''
-            })
-
-        } catch (error) {
-            console.error('Error adding bill:', error)
-            alert('Gagal menambah tagihan: ' + error.message)
-        } finally {
-            setLoading(false)
         }
-    }
+    })
 
     const categories = [
         { value: 'utilities', label: '⚡ Utilitas (Listrik, Air, Gas)' },
@@ -77,61 +80,84 @@ export function AddBillForm({ onSuccess, onCancel }) {
         <>
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Bill Name */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nama Tagihan *
-                    </label>
+                <FormField
+                    label="Nama Tagihan"
+                    hint="Contoh: Listrik PLN, Cicilan Motor"
+                    error={errors.name}
+                    touched={touched.name}
+                    required
+                    fieldId="bill-name"
+                >
                     <input
                         type="text"
+                        name="name"
+                        id="bill-name"
                         placeholder="e.g., Listrik PLN, Cicilan Motor"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={values.name}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="input"
                     />
-                </div>
+                </FormField>
 
                 {/* Amount */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Jumlah (Rp) *
-                    </label>
+                <FormField
+                    label="Jumlah (Rp)"
+                    hint="Masukkan jumlah tagihan dalam rupiah"
+                    error={errors.amount}
+                    touched={touched.amount}
+                    required
+                    fieldId="bill-amount"
+                >
                     <input
                         type="number"
+                        name="amount"
+                        id="bill-amount"
                         placeholder="500000"
-                        value={formData.amount}
-                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                        required
+                        value={values.amount}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
                         min="0"
                         step="1000"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input"
                     />
-                </div>
+                </FormField>
 
                 {/* Due Date */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tanggal Jatuh Tempo *
-                    </label>
+                <FormField
+                    label="Tanggal Jatuh Tempo"
+                    error={errors.dueDate}
+                    touched={touched.dueDate}
+                    required
+                    fieldId="bill-dueDate"
+                >
                     <input
                         type="date"
-                        value={formData.dueDate}
-                        onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                        required
+                        name="dueDate"
+                        id="bill-dueDate"
+                        value={values.dueDate}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
                         min={new Date().toISOString().split('T')[0]}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input"
                     />
-                </div>
+                </FormField>
 
                 {/* Category */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Kategori
-                    </label>
+                <FormField
+                    label="Kategori"
+                    error={errors.category}
+                    touched={touched.category}
+                    required
+                    fieldId="bill-category"
+                >
                     <select
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        name="category"
+                        id="bill-category"
+                        value={values.category}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="input"
                     >
                         {categories.map(cat => (
                             <option key={cat.value} value={cat.value}>
@@ -139,50 +165,57 @@ export function AddBillForm({ onSuccess, onCancel }) {
                             </option>
                         ))}
                     </select>
-                </div>
+                </FormField>
 
                 {/* Recurring */}
                 <div className="flex items-center space-x-2">
                     <input
                         type="checkbox"
+                        name="recurring"
                         id="recurring"
-                        checked={formData.recurring}
-                        onChange={(e) => setFormData({ ...formData, recurring: e.target.checked })}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        checked={values.recurring}
+                        onChange={handleChange}
+                        className="w-4 h-4 accent-primary"
                     />
-                    <label htmlFor="recurring" className="text-sm text-gray-700">
+                    <label htmlFor="recurring" className="text-body text-ink">
                         🔁 Tagihan berulang bulanan
                     </label>
                 </div>
 
                 {/* Notes */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Catatan (Opsional)
-                    </label>
+                <FormField
+                    label="Catatan"
+                    error={errors.notes}
+                    touched={touched.notes}
+                    fieldId="bill-notes"
+                >
                     <textarea
+                        name="notes"
+                        id="bill-notes"
                         placeholder="e.g., Bayar via virtual account BCA"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        value={values.notes}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
                         rows={2}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input"
                     />
-                </div>
+                </FormField>
 
                 {/* Actions */}
                 <div className="flex space-x-3 pt-2">
                     <button
                         type="submit"
-                        disabled={loading}
-                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                        disabled={isSubmitting}
+                        className="flex-1 btn-primary"
                     >
-                        {loading ? '⏳ Menyimpan...' : '✅ Tambah Tagihan'}
+                        {isSubmitting ? 'Menyimpan...' : 'Tambah Tagihan'}
                     </button>
                     {onCancel && (
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                            disabled={isSubmitting}
+                            className="btn-secondary"
                         >
                             Batal
                         </button>

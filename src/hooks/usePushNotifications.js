@@ -38,13 +38,27 @@ export function usePushNotifications() {
     useEffect(() => {
         if (!isEnabled) return
 
-        const unsubscribe = onForegroundMessage((payload) => {
+        const unsubscribe = onForegroundMessage(async (payload) => {
             // Show notification even when app is in foreground
             if (Notification.permission === 'granted') {
-                new Notification(payload.notification?.title || 'Lento', {
-                    body: payload.notification?.body || '',
-                    icon: '/icons/icon-192x192.png',
-                })
+                try {
+                    // Always try Service Worker API first (PWA requirement)
+                    if ('serviceWorker' in navigator) {
+                        const registration = await navigator.serviceWorker.ready
+                        await registration.showNotification(payload.notification?.title || 'Lento', {
+                            body: payload.notification?.body || '',
+                            icon: '/icons/icon-192x192.png',
+                        })
+                    } else {
+                        // Only use legacy API if Service Worker not supported at all
+                        new Notification(payload.notification?.title || 'Lento', {
+                            body: payload.notification?.body || '',
+                            icon: '/icons/icon-192x192.png',
+                        })
+                    }
+                } catch (error) {
+                    console.error('Failed to show notification:', error)
+                }
             }
         })
 

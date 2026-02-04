@@ -13,27 +13,33 @@ interface PerformanceMetric {
 
 /**
  * Send performance metrics to backend analytics
+ * Currently logs to console only. To enable API endpoint, create /api/analytics/webvitals
  */
 const sendToAnalytics = (metric: PerformanceMetric): void => {
-  if (import.meta.env.MODE !== 'production') {
-    console.log('[Performance]', metric);
-    return;
-  }
+  // Always log to console for monitoring
+  console.log('[Performance]', metric);
 
-  // Send to backend analytics endpoint
-  try {
-    fetch('/api/analytics/webvitals', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(metric),
-    }).catch((err) => {
-      console.error('Failed to send analytics:', err);
-    });
-  } catch (error) {
-    console.error('Analytics error:', error);
+  // Optional: Send to backend analytics endpoint if it exists
+  // Uncomment when /api/analytics/webvitals endpoint is implemented
+  /*
+  if (import.meta.env.MODE === 'production') {
+    try {
+      fetch('/api/analytics/webvitals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(metric),
+        keepalive: true, // Ensure request completes even if page unloads
+      }).catch((err) => {
+        // Silently fail - don't block user experience
+        console.debug('Analytics endpoint not available:', err.message);
+      });
+    } catch (error) {
+      console.debug('Analytics error:', error);
+    }
   }
+  */
 };
 
 /**
@@ -218,28 +224,45 @@ export function trackPageLoad(pageName: string): void {
   const measureName = `page-${pageName}-load`;
 
   try {
+    // Clear any existing marks first (handles React StrictMode double-invocation)
+    performance.clearMarks(startMark);
+    performance.clearMarks(endMark);
+    performance.clearMeasures(measureName);
+
     // Start timing
     performance.mark(startMark);
 
     // End timing when page is interactive
     requestIdleCallback(() => {
-      performance.mark(endMark);
-      performance.measure(measureName, startMark, endMark);
+      try {
+        // Check if start mark still exists before measuring
+        const marks = performance.getEntriesByName(startMark, 'mark');
+        if (marks.length === 0) {
+          console.warn(`Performance mark '${startMark}' does not exist, skipping measurement`);
+          return;
+        }
 
-      const measure = performance.getEntriesByName(measureName)[0];
+        performance.mark(endMark);
+        performance.measure(measureName, startMark, endMark);
 
-      sendToAnalytics({
-        metric: `PageLoad-${pageName}`,
-        value: measure.duration,
-        rating: measure.duration < 1000 ? 'good' : measure.duration < 3000 ? 'needs-improvement' : 'poor',
-        url: window.location.pathname,
-        timestamp: Date.now(),
-      });
+        const measure = performance.getEntriesByName(measureName)[0];
+        if (measure) {
+          sendToAnalytics({
+            metric: `PageLoad-${pageName}`,
+            value: measure.duration,
+            rating: measure.duration < 1000 ? 'good' : measure.duration < 3000 ? 'needs-improvement' : 'poor',
+            url: window.location.pathname,
+            timestamp: Date.now(),
+          });
+        }
 
-      // Cleanup
-      performance.clearMarks(startMark);
-      performance.clearMarks(endMark);
-      performance.clearMeasures(measureName);
+        // Cleanup
+        performance.clearMarks(startMark);
+        performance.clearMarks(endMark);
+        performance.clearMeasures(measureName);
+      } catch (error) {
+        console.warn('Page load measurement failed:', error);
+      }
     });
   } catch (error) {
     console.warn('Page load tracking failed:', error);

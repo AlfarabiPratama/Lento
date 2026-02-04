@@ -15,6 +15,8 @@ import Money from '../atoms/Money'
  * @param {number} props.balance
  * @param {boolean} [props.isActive]
  * @param {(id: string) => void} [props.onClick]
+ * @param {(data: Object) => void} [props.onEdit]
+ * @param {string} [props.provider]
  * @param {string} [props.className]
  */
 function AccountChip({
@@ -24,16 +26,39 @@ function AccountChip({
     balance,
     isActive = false,
     onClick,
+    onEdit,
+    provider,
     className = '',
 }) {
     const config = ACCOUNT_TYPES[type] || ACCOUNT_TYPES.cash
 
+    let pressTimer = null
+
     const handleClick = onClick ? () => onClick(id) : undefined
+
+    // Long-press for mobile editing
+    const handleTouchStart = (e) => {
+        if (!onEdit) return
+        pressTimer = setTimeout(() => {
+            e.preventDefault()
+            onEdit({ id, name, type, provider, balance_cached: balance, opening_balance: balance })
+        }, 500) // 500ms long-press
+    }
+
+    const handleTouchEnd = () => {
+        if (pressTimer) {
+            clearTimeout(pressTimer)
+            pressTimer = null
+        }
+    }
 
     return (
         <button
             type="button"
             onClick={handleClick}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
             className={`
         flex flex-col items-center gap-1 
         px-3 py-2 rounded-xl min-w-[80px]
@@ -44,6 +69,7 @@ function AccountChip({
                 }
         ${className}
       `}
+            title={onEdit ? "Long-press untuk edit" : undefined}
         >
             <span className="text-lg">{config.icon}</span>
             <span className={`text-tiny font-medium truncate max-w-[70px] ${isActive ? 'text-primary' : 'text-ink'}`}>

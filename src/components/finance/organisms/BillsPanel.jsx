@@ -137,21 +137,21 @@ export default function BillsPanel() {
                     <div className="p-3 rounded-lg bg-surface">
                         <p className="text-small text-ink-muted mb-1">Total Bulan Ini</p>
                         <p className="text-h2 text-ink">
-                            Rp {(stats.totalDueThisMonth || 0).toLocaleString('id-ID')}
+                            Rp {((stats?.totalDueThisMonth) || 0).toLocaleString('id-ID')}
                         </p>
                     </div>
                     
                     <div className="p-3 rounded-lg bg-surface">
                         <p className="text-small text-ink-muted mb-1">Sudah Dibayar</p>
                         <p className="text-h2 text-green-600">
-                            Rp {(stats.totalPaid || 0).toLocaleString('id-ID')}
+                            Rp {((stats?.totalPaid) || 0).toLocaleString('id-ID')}
                         </p>
                     </div>
                     
                     <div className="p-3 rounded-lg bg-surface">
                         <p className="text-small text-ink-muted mb-1">Belum Dibayar</p>
                         <p className="text-h2 text-orange-600">
-                            Rp {(stats.totalPending || 0).toLocaleString('id-ID')}
+                            Rp {((stats?.totalPending) || 0).toLocaleString('id-ID')}
                         </p>
                     </div>
                     
@@ -161,7 +161,7 @@ export default function BillsPanel() {
                             Terlambat
                         </p>
                         <p className="text-h2 text-red-600">
-                            {stats.overdueCount || 0}
+                            {(stats?.overdueCount) || 0}
                         </p>
                     </div>
                 </div>

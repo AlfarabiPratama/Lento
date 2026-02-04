@@ -16,6 +16,7 @@ const VALID_DENSITIES = [UI_DENSITY.COZY, UI_DENSITY.COMPACT]
  * - Validation for localStorage (prevent injection)
  * - Cross-tab sync via storage event
  * - Fallback to Cozy on errors
+ * - Guaranteed to return valid functions (never null/undefined)
  * 
  * Pattern inspired by theme toggle implementations:
  * https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
@@ -34,19 +35,24 @@ export function useDensity() {
     })
 
     const setDensity = (newDensity) => {
-        // Validate input
-        if (!VALID_DENSITIES.includes(newDensity)) {
-            console.warn('Invalid density value:', newDensity)
-            return
-        }
-
-        setDensityState(newDensity)
-
         try {
-            localStorage.setItem(STORAGE_KEY, newDensity)
+            // Validate input
+            if (!VALID_DENSITIES.includes(newDensity)) {
+                console.warn('Invalid density value:', newDensity)
+                return
+            }
+
+            setDensityState(newDensity)
+
+            try {
+                localStorage.setItem(STORAGE_KEY, newDensity)
+            } catch (error) {
+                console.error('Failed to save density preference:', error)
+                // Continue - user can still use density in current session
+            }
         } catch (error) {
-            console.error('Failed to save density preference:', error)
-            // Continue - user can still use density in current session
+            console.error('setDensity failed:', error)
+            // Fail silently to prevent crashes
         }
     }
 

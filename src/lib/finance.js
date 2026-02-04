@@ -104,18 +104,56 @@ export async function createAccount({
 }
 
 /**
- * Update account (name, provider, etc - NOT balance)
+ * Update account (name, provider, opening_balance, etc)
+ * If opening_balance changes, recalculate balance_cached from all transactions
  */
 export async function updateAccount(id, updates) {
     const db = await getDB()
     const account = await db.get('accounts', id)
     if (!account) return null
 
+    // Check if opening_balance is being updated
+    const openingBalanceChanged = updates.opening_balance !== undefined && 
+                                   updates.opening_balance !== account.opening_balance
+
+    let newBalanceCached = account.balance_cached
+
+    // Recalculate balance if opening_balance changed
+    if (openingBalanceChanged) {
+        // Get all transactions for this account
+        const allTxs = await db.getAll('transactions')
+        const accountTxs = allTxs.filter(t => 
+            !t.deleted_at && 
+            (t.account_id === id || t.to_account_id === id)
+        )
+
+        // Calculate delta from all transactions
+        let transactionsDelta = 0
+        for (const tx of accountTxs) {
+            if (tx.account_id === id) {
+                // This account is source
+                if (tx.type === 'income') {
+                    transactionsDelta += tx.amount
+                } else if (tx.type === 'expense') {
+                    transactionsDelta -= tx.amount
+                } else if (tx.type === 'transfer') {
+                    transactionsDelta -= tx.amount // outgoing
+                }
+            }
+            if (tx.to_account_id === id) {
+                // This account is destination (transfer only)
+                transactionsDelta += tx.amount // incoming
+            }
+        }
+
+        // New balance = new opening balance + all transaction deltas
+        newBalanceCached = updates.opening_balance + transactionsDelta
+    }
+
     const updated = markUpdated({
         ...account,
         ...updates,
-        // Don't allow direct balance manipulation
-        balance_cached: account.balance_cached,
+        balance_cached: newBalanceCached,
     })
 
     await db.put('accounts', updated)
@@ -182,6 +220,37 @@ export async function getCategories() {
 export async function getCategoriesByType(type) {
     const cats = await getCategories()
     return cats.filter(c => c.type === type)
+}
+
+/**
+ * Create custom category
+ */
+export async function createCustomCategory({ name, icon, type }) {
+    const db = await getDB()
+    const newCat = {
+        ...createBaseFields(),
+        name,
+        icon,
+        type,
+        custom: true,
+    }
+    const id = await db.add('finance_categories', newCat)
+    return { ...newCat, id }
+}
+
+/**
+ * Delete custom category (only custom ones)
+ */
+export async function deleteCustomCategory(id) {
+    const db = await getDB()
+    const cat = await db.get('finance_categories', id)
+    if (!cat || !cat.custom) {
+        throw new Error('Can only delete custom categories')
+    }
+    await db.put('finance_categories', {
+        ...cat,
+        deleted_at: new Date().toISOString(),
+    })
 }
 
 // ===== TRANSACTIONS =====

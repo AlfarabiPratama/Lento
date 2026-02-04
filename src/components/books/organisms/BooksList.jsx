@@ -49,24 +49,24 @@ export function BooksList({ books, onRefresh }) {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="w-full min-w-0 space-y-3 sm:space-y-4">
             {/* Search */}
-            <div className="relative">
+            <div className="relative w-full min-w-0">
                 <IconSearch size={20} stroke={2} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
                 <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari judul, penulis, atau tag..."
+                    placeholder="Cari buku..."
                     className="w-full pl-10 pr-4 py-2 border border-line rounded-lg text-body text-ink focus:border-primary focus:outline-none"
                 />
             </div>
 
             {/* Status Filter Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 w-full">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 w-full min-w-0">
                 <button
                     onClick={() => setStatusFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg text-small font-medium whitespace-nowrap transition-colors ${statusFilter === 'all'
+                    className={`px-3 py-1.5 rounded-lg text-small font-medium whitespace-nowrap shrink-0 transition-colors ${statusFilter === 'all'
                         ? 'bg-primary text-white'
                         : 'bg-paper-warm text-ink-muted hover:text-ink'
                         }`}
@@ -79,7 +79,7 @@ export function BooksList({ books, onRefresh }) {
                         <button
                             key={status.value}
                             onClick={() => setStatusFilter(status.value)}
-                            className={`px-3 py-1.5 rounded-lg text-small font-medium whitespace-nowrap transition-colors ${statusFilter === status.value
+                            className={`px-3 py-1.5 rounded-lg text-small font-medium whitespace-nowrap shrink-0 transition-colors ${statusFilter === status.value
                                 ? 'bg-primary text-white'
                                 : 'bg-paper-warm text-ink-muted hover:text-ink'
                                 }`}

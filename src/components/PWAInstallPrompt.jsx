@@ -8,7 +8,7 @@
  * - Lento brand consistency
  */
 
-import { IconX, IconDownload, IconDeviceMobile } from '@tabler/icons-react'
+import { IconX, IconDownload, IconDeviceMobile, IconCheck } from '@tabler/icons-react'
 import { usePWAInstall } from '../hooks/usePWAInstall'
 
 export function PWAInstallPrompt() {
@@ -61,15 +61,15 @@ export function PWAInstallPrompt() {
         {/* Benefits */}
         <ul className="space-y-2 mb-4 text-small text-ink-700">
           <li className="flex items-center gap-2">
-            <span className="text-teal-600">✓</span>
+            <IconCheck size={16} className="text-teal-600 flex-shrink-0" />
             <span>Buka langsung dari home screen</span>
           </li>
           <li className="flex items-center gap-2">
-            <span className="text-teal-600">✓</span>
+            <IconCheck size={16} className="text-teal-600 flex-shrink-0" />
             <span>Bekerja offline tanpa koneksi</span>
           </li>
           <li className="flex items-center gap-2">
-            <span className="text-teal-600">✓</span>
+            <IconCheck size={16} className="text-teal-600 flex-shrink-0" />
             <span>Notifikasi reminder langsung</span>
           </li>
         </ul>

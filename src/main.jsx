@@ -29,6 +29,10 @@ serviceWorkerRegistration.register({
       // Dispatch custom event untuk App.jsx
       window.dispatchEvent(new CustomEvent('sw-update', { detail: registration }))
     }
+  },
+  onError: (error) => {
+    // Silent fail - SW errors shouldn't break the app
+    console.warn('[SW] Registration failed, app will work without offline support:', error)
   }
 })
 

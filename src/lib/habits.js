@@ -10,13 +10,22 @@ const STORE = 'habits'
 
 /**
  * Get all active habits (not deleted)
+ * @param {Object} options - Filter options
+ * @param {boolean} options.includeArchived - Include archived habits
  */
-export async function getAllHabits() {
+export async function getAllHabits(options = {}) {
+    const { includeArchived = false } = options
     const db = await getDB()
     const all = await db.getAll(STORE)
-    return all.filter(h => !h.deleted_at).sort((a, b) =>
-        new Date(b.created_at) - new Date(a.created_at)
-    )
+    return all
+        .filter(h => !h.deleted_at && (includeArchived || !h.archived_at))
+        .sort((a, b) => {
+            // Sort by order field first (if exists), then by creation date
+            if (a.order !== undefined && b.order !== undefined) {
+                return a.order - b.order
+            }
+            return new Date(b.created_at) - new Date(a.created_at)
+        })
 }
 
 /**
@@ -34,6 +43,9 @@ export async function createHabit({
     name,
     description = '',
     color = 'primary',
+    category = '', // NEW: Kesehatan, Produktivitas, Belajar, etc
+    tags = [], // NEW: Custom tags
+    icon = '', // NEW: Icon name from Tabler Icons
     frequency = 'daily',
     reminder_enabled = false,
     reminder_time = null,
@@ -46,6 +58,9 @@ export async function createHabit({
         name,
         description,
         color,
+        category,
+        tags,
+        icon,
         frequency, // 'daily' | 'weekly' | 'custom'
         target_days: frequency === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : [], // 0=Sunday
         streak_current: 0,
@@ -92,6 +107,54 @@ export async function updateHabit(id, updates) {
 }
 
 /**
+ * Archive habit (soft archive - different from delete)
+ */
+export async function archiveHabit(id) {
+    const db = await getDB()
+    const habit = await db.get(STORE, id)
+
+    if (!habit) throw new Error('Habit not found')
+
+    const archived = markUpdated({
+        ...habit,
+        archived_at: new Date().toISOString(),
+    })
+
+    await db.put(STORE, archived)
+    await addToOutbox(STORE, 'update', archived)
+
+    // Cancel reminder jobs when archived
+    cancelReminderJobs(id).catch(console.error)
+
+    return archived
+}
+
+/**
+ * Unarchive habit
+ */
+export async function unarchiveHabit(id) {
+    const db = await getDB()
+    const habit = await db.get(STORE, id)
+
+    if (!habit) throw new Error('Habit not found')
+
+    const unarchived = markUpdated({
+        ...habit,
+        archived_at: null,
+    })
+
+    await db.put(STORE, unarchived)
+    await addToOutbox(STORE, 'update', unarchived)
+
+    // Restore reminder jobs if enabled
+    if (unarchived.reminder_enabled && unarchived.reminder_time) {
+        generateReminderJobs(unarchived).catch(console.error)
+    }
+
+    return unarchived
+}
+
+/**
  * Delete habit (soft delete)
  */
 export async function deleteHabit(id) {
@@ -118,7 +181,7 @@ const CHECKIN_STORE = 'checkins'
 /**
  * Check in habit for a date
  */
-export async function checkInHabit(habitId, date = new Date()) {
+export async function checkInHabit(habitId, date = new Date(), note = '') {
     const db = await getDB()
     const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
 
@@ -133,7 +196,7 @@ export async function checkInHabit(habitId, date = new Date()) {
         habit_id: habitId,
         date: dateStr,
         completed: true,
-        note: '',
+        note: note || '',
     }
 
     await db.add(CHECKIN_STORE, checkin)
@@ -266,6 +329,8 @@ export default {
     createHabit,
     updateHabit,
     deleteHabit,
+    archiveHabit,
+    unarchiveHabit,
     checkInHabit,
     uncheckHabit,
     getCheckinForDate,

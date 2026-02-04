@@ -17,6 +17,7 @@ import {
     IconChevronDown,
     IconChevronUp
 } from '@tabler/icons-react'
+import { WeeklyReportSkeleton } from './skeletons/WidgetSkeletons'
 
 /**
  * Get week start/end dates (Monday to Sunday)
@@ -117,39 +118,39 @@ function getMotivationalMessage(stats, trend) {
     
     if (completionRate >= 85) {
         if (trend > 10) {
-            return "Performa luar biasa! Kamu meningkat pesat minggu ini 🚀"
+            return "Performa luar biasa! Kamu meningkat pesat minggu ini"
         }
-        return "Konsistensi sempurna! Terus pertahankan ritme ini ⭐"
+        return "Konsistensi sempurna! Terus pertahankan ritme ini"
     }
     
     if (completionRate >= 70) {
         if (currentStreak >= 5) {
-            return `Streak ${currentStreak} hari! Momentum bagus, lanjutkan 🔥`
+            return `Streak ${currentStreak} hari! Momentum bagus, lanjutkan`
         }
         if (trend > 0) {
-            return "Progres bagus! Sedikit lagi mencapai target minggu ini 💪"
+            return "Progres bagus! Sedikit lagi mencapai target minggu ini"
         }
-        return "Hari-hari produktif! Jaga konsistensi sampai akhir minggu 👍"
+        return "Hari-hari produktif! Jaga konsistensi sampai akhir minggu"
     }
     
     if (completionRate >= 50) {
         if (trend < 0) {
-            return "Minggu ini masih bisa lebih baik. Yuk mulai lagi hari ini! 🌱"
+            return "Minggu ini masih bisa lebih baik. Yuk mulai lagi hari ini!"
         }
-        return "Setengah perjalanan sudah dilalui. Terus semangat! 💚"
+        return "Setengah perjalanan sudah dilalui. Terus semangat!"
     }
     
     if (activeDays >= 2) {
-        return "Setiap langkah kecil berarti. Fokus pada hari ini aja 🌿"
+        return "Setiap langkah kecil berarti. Fokus pada hari ini aja"
     }
     
-    return "Belum terlambat untuk memulai. Mulai dari satu kebiasaan kecil ☀️"
+    return "Belum terlambat untuk memulai. Mulai dari satu kebiasaan kecil"
 }
 
 /**
  * WeeklyReport Component
  */
-export function WeeklyReport({ activitiesByDate }) {
+export function WeeklyReport({ activitiesByDate, isLoading = false }) {
     const [isExpanded, setIsExpanded] = useState(false)
     
     // Calculate this week and last week stats
@@ -184,6 +185,11 @@ export function WeeklyReport({ activitiesByDate }) {
     }, [thisWeek.stats, lastWeek.stats])
     
     const motivationMessage = getMotivationalMessage(thisWeek.stats, trends.overall)
+    
+    // Show skeleton during loading - AFTER all hooks
+    if (isLoading) {
+        return <WeeklyReportSkeleton />
+    }
     
     return (
         <div className="card bg-gradient-to-br from-primary/5 to-success/5">

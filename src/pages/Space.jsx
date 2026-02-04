@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { IconPlus, IconX, IconSearch, IconChevronLeft, IconFileText, IconFolderShare } from '@tabler/icons-react'
+import { IconPlus, IconX, IconSearch, IconChevronLeft, IconFileText, IconFolderShare, IconListCheck, IconEye, IconPencil } from '@tabler/icons-react'
 import { usePages, usePage } from '../hooks/usePages'
 import EmptyState from '../components/EmptyState'
 import { ShareButton } from '../components/ui/ShareButton'
@@ -12,6 +12,9 @@ import { extractTags } from '../features/space/tagParser'
 import { extractLinks } from '../features/space/linkParser'
 import { SlashMenu } from '../components/space/SlashMenu'
 import { getFilteredCommands, getDynamicInsert } from '../features/space/slashCommands'
+import { ContentRenderer, TaskCounter } from '../components/space/CheckboxRenderer'
+import { getTaskStats, toggleCheckboxAtLine } from '../features/space/checkboxParser'
+import { TaskListView } from '../components/space/TaskListView'
 
 // Notebooks
 import { useNotebooks } from '../features/space/notebooks/useNotebooks'
@@ -57,6 +60,9 @@ function Space() {
     const [editContent, setEditContent] = useState('')
     const [editTitle, setEditTitle] = useState('')
     const [saveStatus, setSaveStatus] = useState('saved')
+    const [viewMode, setViewMode] = useState('edit') // 'edit' | 'preview'
+    const [taskFilter, setTaskFilter] = useState('all') // 'all' | 'incomplete' | 'completed'
+    const [showTaskList, setShowTaskList] = useState(false) // Global task list view
 
     // Slash Command State
     const [slashState, setSlashState] = useState({
@@ -108,6 +114,7 @@ function Space() {
             setEditTitle(page.title)
             setEditContent(page.content)
             setSaveStatus('saved')
+            setViewMode('edit') // Reset to edit mode when switching notes
         }
     }, [page])
 
@@ -136,6 +143,12 @@ function Space() {
         return getBacklinks(page.title)
     }, [page, getBacklinks])
 
+    // Get task stats for current page
+    const taskStats = useMemo(() => {
+        return getTaskStats(editContent)
+    }, [editContent])
+
+    // 
     // Debounced save to DB
     useEffect(() => {
         if (!selectedId || saveStatus !== 'dirty') return
@@ -169,6 +182,29 @@ function Space() {
         if (selectedId) {
             updateOptimistic(selectedId, { title: value })
         }
+    }
+
+    // Handle checkbox toggle in preview mode
+    const handleCheckboxToggle = (lineIndex) => {
+        const newContent = toggleCheckboxAtLine(editContent, lineIndex)
+        updateContent(newContent)
+    }
+
+    // Handle task toggle from global task list
+    const handleTaskToggleFromList = async (pageId, lineIndex) => {
+        const targetPage = pages.find(p => p.id === pageId)
+        if (!targetPage) return
+        
+        const newContent = toggleCheckboxAtLine(targetPage.content, lineIndex)
+        
+        // Update via pages hook
+        if (selectedId === pageId) {
+            updateContent(newContent)
+        }
+        
+        // Trigger update
+        await updatePage({ id: pageId, content: newContent })
+        await refreshPages()
     }
 
     // --- Slash Command Handlers ---
@@ -209,6 +245,46 @@ function Space() {
 
     const handleKeyDown = (e) => {
         const textarea = e.target
+
+        // Keyboard shortcut: Ctrl/Cmd + Shift + T to toggle view mode
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+            e.preventDefault()
+            setViewMode(prev => prev === 'edit' ? 'preview' : 'edit')
+            return
+        }
+
+        // Keyboard shortcut: Ctrl/Cmd + Enter to insert checkbox
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault()
+            const cursorPos = textarea.selectionStart
+            const textBefore = textarea.value.substring(0, cursorPos)
+            const textAfter = textarea.value.substring(cursorPos)
+            
+            // Check if we're at the start of a line
+            const lastNewline = textBefore.lastIndexOf('\n')
+            const currentLineStart = lastNewline === -1 ? 0 : lastNewline + 1
+            const isAtLineStart = cursorPos === currentLineStart || /^\s*$/.test(textBefore.substring(currentLineStart))
+            
+            if (isAtLineStart) {
+                // Insert checkbox at current position
+                const newContent = textBefore + '- [ ] ' + textAfter
+                updateContent(newContent)
+                // Move cursor after checkbox
+                setTimeout(() => {
+                    textarea.selectionStart = textarea.selectionEnd = cursorPos + 6
+                    textarea.focus()
+                }, 0)
+            } else {
+                // Insert checkbox on new line
+                const newContent = textBefore + '\n- [ ] ' + textAfter
+                updateContent(newContent)
+                setTimeout(() => {
+                    textarea.selectionStart = textarea.selectionEnd = cursorPos + 7
+                    textarea.focus()
+                }, 0)
+            }
+            return
+        }
 
         // Slash Menu Navigation
         if (slashState.isOpen) {
@@ -372,7 +448,16 @@ function Space() {
             {/* Left pane - Sidebar */}
             <div className={`w-full lg:w-72 shrink-0 border-r border-line bg-surface flex flex-col ${selectedId ? 'hidden lg:flex' : ''}`}>
                 <div className="p-4 border-b border-line/60">
-                    <h1 className="text-h2 text-ink mb-3">Space</h1>
+                    <div className="flex items-center justify-between mb-3">
+                        <h1 className="text-h2 text-ink">Space</h1>
+                        <button
+                            onClick={() => setShowTaskList(!showTaskList)}
+                            className={`btn-ghost btn-sm ${showTaskList ? 'text-primary' : ''}`}
+                            title="Lihat semua task"
+                        >
+                            <IconListCheck size={20} />
+                        </button>
+                    </div>
                     {/* Search - icon di input: 18px */}
                     <div className="relative">
                         <IconSearch
@@ -584,6 +669,61 @@ function Space() {
                                 <IconChevronLeft size={20} stroke={2} />
                                 <span>Kembali</span>
                             </button>
+                            
+                            {/* View mode toggle - Desktop */}
+                            <div className="hidden lg:flex items-center gap-2">
+                                {/* View mode toggle */}
+                                <div className="flex items-center gap-1 bg-paper-warm rounded-lg p-0.5">
+                                    <button
+                                        onClick={() => setViewMode('edit')}
+                                        className={`px-3 py-1.5 text-small rounded transition-all ${
+                                            viewMode === 'edit'
+                                                ? 'bg-surface text-ink shadow-sm'
+                                                : 'text-ink-muted hover:text-ink'
+                                        }`}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('preview')}
+                                        className={`px-3 py-1.5 text-small rounded transition-all ${
+                                            viewMode === 'preview'
+                                                ? 'bg-surface text-ink shadow-sm'
+                                                : 'text-ink-muted hover:text-ink'
+                                        }`}
+                                    >
+                                        Preview
+                                    </button>
+                                </div>
+                                
+                                {/* Task counter - only show if there are tasks */}
+                                {taskStats.total > 0 && (
+                                    <TaskCounter 
+                                        total={taskStats.total} 
+                                        completed={taskStats.completed}
+                                        className="ml-2"
+                                    />
+                                )}
+                            </div>
+                            
+                            {/* Mobile view toggle + task counter */}
+                            <div className="lg:hidden flex items-center gap-2">
+                                <button
+                                    onClick={() => setViewMode(prev => prev === 'edit' ? 'preview' : 'edit')}
+                                    className="btn-ghost btn-sm px-2"
+                                    title={viewMode === 'edit' ? 'Preview' : 'Edit'}
+                                >
+                                    {viewMode === 'edit' ? <IconEye size={18} /> : <IconPencil size={18} />}
+                                </button>
+                                
+                                {taskStats.total > 0 && (
+                                    <TaskCounter 
+                                        total={taskStats.total} 
+                                        completed={taskStats.completed}
+                                    />
+                                )}
+                            </div>
+                            
                             <div className="hidden lg:block" />
                             <div className="flex items-center gap-2">
                                 <ShareButton
@@ -630,32 +770,69 @@ function Space() {
                             )}
 
                             <div className="relative flex-1 flex flex-col">
-                                <textarea
-                                    id="note-editor"
-                                    ref={editorRef}
-                                    value={editContent}
-                                    onChange={handleContentChange}
-                                    onKeyDown={handleKeyDown}
-                                    onInput={handleInput}
-                                    placeholder="Ketik '/' untuk perintah..."
-                                    className="flex-none min-h-[50vh] px-4 lg:px-6 py-2 text-body text-ink bg-transparent border-none resize-none focus:outline-none placeholder:text-ink-soft leading-relaxed"
-                                />
+                                {viewMode === 'edit' ? (
+                                    <>
+                                        <textarea
+                                            id="note-editor"
+                                            ref={editorRef}
+                                            value={editContent}
+                                            onChange={handleContentChange}
+                                            onKeyDown={handleKeyDown}
+                                            onInput={handleInput}
+                                            placeholder="Ketik '/' untuk perintah...&#10;&#10;Tips: Buat task dengan:&#10;- [ ] Task belum selesai&#10;- [x] Task sudah selesai"
+                                            className="flex-none min-h-[50vh] px-4 lg:px-6 py-2 text-body text-ink bg-transparent border-none resize-none focus:outline-none placeholder:text-ink-soft leading-relaxed"
+                                        />
 
-                                {/* Slash Menu Popup */}
-                                {slashState.isOpen && (
-                                    <SlashMenu
-                                        commands={filteredCommands}
-                                        selectedIndex={slashState.index}
-                                        onSelect={executeCommand}
-                                        onClose={() => setSlashState({ ...slashState, isOpen: false })}
-                                        position={{
-                                            // Fallback fixed position inside editor area relative to container
-                                            // Simple: 100px from top, 20px from left of textarea
-                                            // or floating near bottom left
-                                            top: slashState.position.top,
-                                            left: slashState.position.left
-                                        }}
-                                    />
+                                        {/* Slash Menu Popup */}
+                                        {slashState.isOpen && (
+                                            <SlashMenu
+                                                commands={filteredCommands}
+                                                selectedIndex={slashState.index}
+                                                onSelect={executeCommand}
+                                                onClose={() => setSlashState({ ...slashState, isOpen: false })}
+                                                position={{
+                                                    // Fallback fixed position inside editor area relative to container
+                                                    // Simple: 100px from top, 20px from left of textarea
+                                                    // or floating near bottom left
+                                                    top: slashState.position.top,
+                                                    left: slashState.position.left
+                                                }}
+                                            />
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="flex-none min-h-[50vh] px-4 lg:px-6 py-2">
+                                        {/* Filter controls for preview mode */}
+                                        {taskStats.total > 0 && (
+                                            <div className="flex gap-2 mb-4 pb-3 border-b border-line">
+                                                <button
+                                                    onClick={() => setTaskFilter('all')}
+                                                    className={`btn-sm ${taskFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                                                >
+                                                    Semua
+                                                </button>
+                                                <button
+                                                    onClick={() => setTaskFilter('incomplete')}
+                                                    className={`btn-sm ${taskFilter === 'incomplete' ? 'btn-primary' : 'btn-secondary'}`}
+                                                >
+                                                    Belum
+                                                </button>
+                                                <button
+                                                    onClick={() => setTaskFilter('completed')}
+                                                    className={`btn-sm ${taskFilter === 'completed' ? 'btn-primary' : 'btn-secondary'}`}
+                                                >
+                                                    Selesai
+                                                </button>
+                                            </div>
+                                        )}
+                                        
+                                        <ContentRenderer
+                                            content={editContent}
+                                            onToggle={handleCheckboxToggle}
+                                            disabled={false}
+                                            filter={taskFilter}
+                                        />
+                                    </div>
                                 )}
                             </div>
 
@@ -672,6 +849,18 @@ function Space() {
                             </div>
                         </div>
                     </>
+                ) : showTaskList ? (
+                    // Global Task List View
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <TaskListView
+                            pages={pages}
+                            onNavigateToNote={(noteId) => {
+                                setSelectedId(noteId)
+                                setShowTaskList(false)
+                            }}
+                            onToggleTask={handleTaskToggleFromList}
+                        />
+                    </div>
                 ) : (
                     <div className="flex-1 flex items-center justify-center text-center text-ink-muted p-6">
                         <div>

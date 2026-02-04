@@ -44,16 +44,19 @@ export function SearchProvider({ children }) {
 
         if (debounceRef.current) {
             clearTimeout(debounceRef.current)
+            debounceRef.current = null
         }
 
         debounceRef.current = setTimeout(() => {
             const searchResults = searchQuery(query, filters)
             setResults(searchResults)
+            debounceRef.current = null
         }, SEARCH_DEFAULTS.debounceMs)
 
         return () => {
             if (debounceRef.current) {
                 clearTimeout(debounceRef.current)
+                debounceRef.current = null
             }
         }
     }, [query, filters, indexReady])

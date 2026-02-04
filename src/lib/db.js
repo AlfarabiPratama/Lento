@@ -1,7 +1,7 @@
 import { openDB } from 'idb'
 
 const DB_NAME = 'lento-db'
-const DB_VERSION = 9 // V9: Important Dates
+const DB_VERSION = 10 // V10: Transaction Templates
 
 /**
  * Database schema untuk Lento
@@ -197,6 +197,16 @@ async function initDB() {
                 importantDatesStore.createIndex('by_type', 'type')
                 importantDatesStore.createIndex('by_user', 'user_id')
                 importantDatesStore.createIndex('by_sync', 'sync_status')
+            }
+
+            // ===== V10 Stores: Transaction Templates =====
+
+            if (!db.objectStoreNames.contains('transaction_templates')) {
+                const templatesStore = db.createObjectStore('transaction_templates', { keyPath: 'id' })
+                templatesStore.createIndex('by_type', 'type')
+                templatesStore.createIndex('by_name', 'name')
+                templatesStore.createIndex('by_deleted', 'deleted_at')
+                templatesStore.createIndex('by_user', 'user_id')
             }
         },
     })

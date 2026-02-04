@@ -35,144 +35,15 @@ import { usePendingCount } from '../hooks/usePendingCount'
 import { useDensity, UI_DENSITY } from '../hooks/useDensity'
 import { useAppPrefs } from '../hooks/useAppPrefs'
 import { useToast } from '../contexts/ToastContext'
+import { haptics } from '../utils/haptics'
 import { requestPersistentStorage, getStorageHealth } from '../lib/storage'
-import { useReminderCenter } from '../contexts/ReminderContext'
-import { showLocalNotification, getNotificationPermission, requestNotificationPermission } from '../features/reminders/notificationService'
-import { subscribeUserToPush, unsubscribeFromPush, getPushSubscription } from '../features/reminders/pushSubscription'
+import { getNotificationPermission, requestNotificationPermission } from '../features/reminders/notificationService'
 import { AccountSection } from '../components/settings/AccountSection'
 import { SyncSection } from '../components/settings/SyncSection'
 import { SettingsTabBar, VALID_TABS, DEFAULT_TAB } from '../components/settings/SettingsTabBar'
 import { NotificationSettings } from '../components/settings/NotificationSettings'
+import { PWAInstallSection } from '../components/settings/PWAInstallSection'
 import NotificationMetrics from '../components/settings/NotificationMetrics'
-
-const NotificationPreference = () => {
-    const { prefs, setPrefs, ensurePermission } = useReminderCenter()
-    const { showToast } = useToast()
-    const [permissionState, setPermissionState] = useState(getNotificationPermission())
-    const [pushSubscribed, setPushSubscribed] = useState(false)
-    const [pushLoading, setPushLoading] = useState(false)
-
-    useEffect(() => {
-        getPushSubscription().then((sub) => setPushSubscribed(!!sub)).catch(() => setPushSubscribed(false))
-        setPermissionState(getNotificationPermission())
-    }, [])
-
-    const handleToggleLocal = async () => {
-        if (!prefs.localEnabled) {
-            const result = await ensurePermission()
-            setPermissionState(result)
-            if (result !== 'granted') {
-                showToast('warning', 'Izin notifikasi belum diberikan')
-                return
-            }
-        }
-        setPrefs((prev) => ({ ...prev, localEnabled: !prev.localEnabled }))
-    }
-
-    const handleTogglePush = async () => {
-        if (!prefs.pushEnabled) {
-            setPushLoading(true)
-            try {
-                await subscribeUserToPush()
-                setPushSubscribed(true)
-                setPrefs((prev) => ({ ...prev, pushEnabled: true }))
-                showToast('success', 'Push notifications diaktifkan')
-            } catch (e) {
-                showToast('error', e?.message || 'Gagal mengaktifkan push')
-            } finally {
-                setPushLoading(false)
-            }
-        } else {
-            setPushLoading(true)
-            try {
-                await unsubscribeFromPush()
-                setPushSubscribed(false)
-                setPrefs((prev) => ({ ...prev, pushEnabled: false }))
-                showToast('success', 'Push notifications dimatikan')
-            } catch (e) {
-                showToast('error', 'Gagal mematikan push')
-            } finally {
-                setPushLoading(false)
-            }
-        }
-    }
-
-    return (
-        <section id="notifikasi" className="space-y-4 card">
-            <div className="flex items-center gap-2">
-                <IconBell size={20} />
-                <h2 className="text-h2 text-ink">Reminders & Notifikasi</h2>
-            </div>
-
-            <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                        <p className="text-body text-ink">In-app Reminder</p>
-                        <p className="text-small text-ink-muted">Banner & toast di dalam aplikasi</p>
-                    </div>
-                    <button
-                        onClick={() => setPrefs((prev) => ({ ...prev, inAppEnabled: !prev.inAppEnabled }))}
-                        className={`btn-sm flex-shrink-0 ${prefs.inAppEnabled ? 'btn-primary' : 'btn-secondary'}`}
-                    >
-                        {prefs.inAppEnabled ? 'Aktif' : 'Nonaktif'}
-                    </button>
-                </div>
-
-                <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                        <p className="text-body text-ink">Notifikasi Lokal</p>
-                        <p className="text-small text-ink-muted">Pengingat di pagi & malam hari</p>
-                    </div>
-                    <button
-                        onClick={handleToggleLocal}
-                        className={`btn-sm flex-shrink-0 ${prefs.localEnabled ? 'btn-primary' : 'btn-secondary'}`}
-                    >
-                        {prefs.localEnabled ? 'Aktif' : 'Nonaktif'}
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                    <label className="flex flex-col gap-1">
-                        <span className="text-small text-ink-muted flex items-center gap-1"><IconClock size={14} /> Pagi</span>
-                        <input
-                            type="time"
-                            value={prefs.morningTime}
-                            onChange={(e) => setPrefs((prev) => ({ ...prev, morningTime: e.target.value }))}
-                            className="input"
-                        />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                        <span className="text-small text-ink-muted flex items-center gap-1"><IconClock size={14} /> Malam</span>
-                        <input
-                            type="time"
-                            value={prefs.eveningTime}
-                            onChange={(e) => setPrefs((prev) => ({ ...prev, eveningTime: e.target.value }))}
-                            className="input"
-                        />
-                    </label>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-line my-2" />
-
-                {/* Push Notification */}
-                <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                        <p className="text-body text-ink">Push Notification</p>
-                        <p className="text-small text-ink-muted">Notifikasi saat app tertutup</p>
-                    </div>
-                    <button
-                        onClick={handleTogglePush}
-                        className={`btn-sm flex-shrink-0 ${prefs.pushEnabled && pushSubscribed ? 'btn-primary' : 'btn-secondary'}`}
-                        disabled={pushLoading}
-                    >
-                        {pushLoading ? '...' : prefs.pushEnabled && pushSubscribed ? 'Aktif' : 'Nonaktif'}
-                    </button>
-                </div>
-            </div>
-        </section>
-    )
-}
 
 /**
  * Settings - App configuration and preferences
@@ -197,7 +68,11 @@ function Settings() {
         setSearchParams({ tab: tabId })
     }
 
-    const { mode, setMode, isDark } = useTheme()
+    const themeHook = useTheme()
+    const mode = themeHook?.mode || 'system'
+    const setMode = themeHook?.setMode || (() => {})
+    const isDark = themeHook?.isDark || false
+    
     const {
         user,
         loading: authLoading,
@@ -216,8 +91,12 @@ function Settings() {
     const { prefs, updatePrefs, updatePrefsImmediate, markSyncedNow, saveError } = useSyncPrefs()
     const { count: pendingCount, refresh: refreshPendingCount } = usePendingCount()
     const { showToast } = useToast()
-    const { density, setDensity } = useDensity()
-    const { prefs: appPrefs, togglePref } = useAppPrefs()
+    const densityHook = useDensity()
+    const density = densityHook?.density || UI_DENSITY.COZY
+    const setDensity = densityHook?.setDensity || (() => {})
+    const appPrefsHook = useAppPrefs()
+    const appPrefs = appPrefsHook?.prefs || {}
+    const togglePref = appPrefsHook?.togglePref || (() => {})
     const [exportStatus, setExportStatus] = useState(null)
     const [importStatus, setImportStatus] = useState(null)
     const [importResult, setImportResult] = useState(null)
@@ -318,6 +197,23 @@ function Settings() {
         } catch (error) {
             console.error('Sign out error:', error)
             showToast('error', 'Gagal keluar')
+        }
+    }
+
+    /**
+     * Handle Google Sign-In with error handling
+     */
+    const handleSignInWithGoogle = async () => {
+        try {
+            const result = await signInWithGoogle()
+            if (result.success) {
+                showToast('success', `Selamat datang, ${result.user.displayName || result.user.email}!`)
+            } else {
+                showToast('error', result.message || 'Gagal masuk dengan Google')
+            }
+        } catch (error) {
+            console.error('Google sign-in error:', error)
+            showToast('error', error.message || 'Gagal masuk dengan Google')
         }
     }
 
@@ -467,11 +363,12 @@ function Settings() {
                     hidden={activeTab !== 'tampilan'}
                     className="space-y-6"
                 >
-                    <NotificationPreference />
-                    
                     <NotificationSettings />
                     
                     <NotificationMetrics />
+
+                    {/* PWA Install Section */}
+                    <PWAInstallSection />
 
                     {/* Tampilan Section */}
                     <section id="tampilan" className="space-y-4 card">
@@ -494,7 +391,14 @@ function Settings() {
                                 {themeOptions.map(({ value, label, icon: Icon }) => (
                                     <button
                                         key={value}
-                                        onClick={() => setMode(value)}
+                                        onClick={() => {
+                                            try {
+                                                setMode(value)
+                                            } catch (error) {
+                                                console.error('Failed to set theme:', error)
+                                                showToast('error', 'Gagal mengubah tema')
+                                            }
+                                        }}
                                         className={`
                                     p-3 rounded-lg border-2 transition-all
                                     flex flex-col items-center gap-2
@@ -522,7 +426,14 @@ function Settings() {
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     type="button"
-                                    onClick={() => setDensity(UI_DENSITY.COZY)}
+                                    onClick={() => {
+                                        try {
+                                            setDensity(UI_DENSITY.COZY)
+                                        } catch (error) {
+                                            console.error('Failed to set density:', error)
+                                            showToast('error', 'Gagal mengubah kepadatan tampilan')
+                                        }
+                                    }}
                                     className={`
                                 px-4 py-3 rounded-xl border-2 transition-all
                                 flex flex-col items-start gap-1
@@ -545,7 +456,14 @@ function Settings() {
 
                                 <button
                                     type="button"
-                                    onClick={() => setDensity(UI_DENSITY.COMPACT)}
+                                    onClick={() => {
+                                        try {
+                                            setDensity(UI_DENSITY.COMPACT)
+                                        } catch (error) {
+                                            console.error('Failed to set density:', error)
+                                            showToast('error', 'Gagal mengubah kepadatan tampilan')
+                                        }
+                                    }}
                                     className={`
                                 px-4 py-3 rounded-xl border-2 transition-all
                                 flex flex-col items-start gap-1
@@ -592,7 +510,10 @@ function Settings() {
                                     <input
                                         type="checkbox"
                                         checked={appPrefs.showQuickCaptureFab}
-                                        onChange={() => togglePref('showQuickCaptureFab')}
+                                        onChange={() => {
+                                            haptics.light()
+                                            togglePref('showQuickCaptureFab')
+                                        }}
                                         className="toggle-checkbox"
                                     />
                                 </label>
@@ -611,7 +532,10 @@ function Settings() {
                                     <input
                                         type="checkbox"
                                         checked={appPrefs.showSoundscapesFab}
-                                        onChange={() => togglePref('showSoundscapesFab')}
+                                        onChange={() => {
+                                            haptics.light()
+                                            togglePref('showSoundscapesFab')
+                                        }}
                                         className="toggle-checkbox"
                                     />
                                 </label>
@@ -690,7 +614,7 @@ function Settings() {
                         isLoggedIn={isAuthenticated}
                         displayName={displayName}
                         onDisplayNameChange={handleDisplayNameChange}
-                        onSignInWithGoogle={signInWithGoogle}
+                        onSignInWithGoogle={handleSignInWithGoogle}
                         onSignInWithEmail={signInWithEmail}
                         onSignUpWithEmail={signUpWithEmail}
                         onSetupRecaptcha={setupRecaptcha}
@@ -719,7 +643,7 @@ function Settings() {
                         syncStatus={{ syncing, error: syncError, lastSync }}
                         onSync={handleSync}
                         isLoggedIn={isAuthenticated}
-                        onSignInWithGoogle={signInWithGoogle}
+                        onSignInWithGoogle={handleSignInWithGoogle}
                         authLoading={authLoading}
                         saveError={saveError}
                         onDismissSaveError={() => {
@@ -757,8 +681,8 @@ function Settings() {
                                         <p className="font-medium text-body text-ink">Proteksi Data Offline</p>
                                         <p className="text-tiny text-ink-muted">
                                             {storageHealth?.persisted
-                                                ? '✅ Data dilindungi dari penghapusan otomatis'
-                                                : '⚠️ Data bisa dihapus browser saat storage penuh'}
+                                                ? 'Data dilindungi dari penghapusan otomatis'
+                                                : 'Data bisa dihapus browser saat storage penuh'}
                                         </p>
                                     </div>
                                 </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IconDownload, IconX, IconDeviceMobile } from '@tabler/icons-react'
+import { IconDownload, IconX, IconDeviceMobile, IconCheck } from '@tabler/icons-react'
 
 /**
  * PWAInstallPrompt - Prompt user to install app to home screen
@@ -124,16 +124,16 @@ export function PWAInstallPrompt() {
         {/* Benefits */}
         <ul className="space-y-1 mb-4 pl-1">
           <li className="text-caption text-ink-muted flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full bg-primary"></span>
-            <span>✓ Track habits offline</span>
+            <IconCheck size={14} className="text-success flex-shrink-0" />
+            <span>Track habits offline</span>
           </li>
           <li className="text-caption text-ink-muted flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full bg-primary"></span>
-            <span>✓ Faster loading</span>
+            <IconCheck size={14} className="text-success flex-shrink-0" />
+            <span>Faster loading</span>
           </li>
           <li className="text-caption text-ink-muted flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full bg-primary"></span>
-            <span>✓ Native app experience</span>
+            <IconCheck size={14} className="text-success flex-shrink-0" />
+            <span>Native app experience</span>
           </li>
         </ul>
 

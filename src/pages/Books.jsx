@@ -117,18 +117,18 @@ function Books() {
     return (
         <>
         <PullToRefresh onRefresh={handleRefresh}>
-            <div className="w-full min-w-0 space-y-6">
+            <div className="w-full min-w-0 space-y-4 sm:space-y-6 animate-in">
                 {/* Header */}
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-2 sm:gap-3 min-w-0 w-full">
                 <div className="min-w-0 flex-1">
-                    <h1 className="text-h1 text-ink">Library Buku</h1>
-                    <p className="text-small text-ink-muted mt-1">
+                    <h1 className="text-h1 text-ink truncate">Library Buku</h1>
+                    <p className="text-small text-ink-muted mt-1 truncate">
                         {books.length} buku di library
                     </p>
                 </div>
                 <button
                     onClick={() => setShowAddForm(true)}
-                    className="btn-primary flex items-center gap-2 flex-shrink-0"
+                    className="btn-primary flex items-center gap-1.5 sm:gap-2 flex-shrink-0 px-3 sm:px-4"
                     aria-label="Tambah Buku"
                 >
                     <IconPlus size={20} stroke={2} />

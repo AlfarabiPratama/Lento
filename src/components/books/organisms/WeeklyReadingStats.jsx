@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IconTrendingUp, IconBook, IconClock } from '@tabler/icons-react'
+import { IconTrendingUp, IconBook, IconClock, IconFlame } from '@tabler/icons-react'
 import { getDailyStats, getWeeklyStats, getReadingStreak } from '../../../lib/bookSessionsRepo.js'
 
 /**
@@ -35,7 +35,7 @@ export function WeeklyReadingStats({ onRefresh }) {
 
     if (loading) {
         return (
-            <div className="card p-4">
+            <div className="card p-3 sm:p-4">
                 <div className="animate-pulse space-y-3">
                     <div className="h-5 bg-paper-warm rounded w-40" />
                     <div className="h-24 bg-paper-warm rounded" />
@@ -52,40 +52,42 @@ export function WeeklyReadingStats({ onRefresh }) {
     const hasData = values.some(v => v > 0)
 
     return (
-        <div className="card p-4 space-y-4">
+        <div className="card p-3 sm:p-4 space-y-3 sm:space-y-4 w-full min-w-0">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <IconTrendingUp size={20} stroke={2} className="text-primary" />
-                    <h3 className="text-h3 text-ink">Statistik Minggu Ini</h3>
+            <div className="flex items-center justify-between gap-1.5 sm:gap-2 min-w-0 w-full">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <IconTrendingUp size={20} stroke={2} className="text-primary shrink-0" />
+                    <h3 className="text-h3 text-ink truncate">Statistik Minggu Ini</h3>
                 </div>
 
                 {/* Unit Toggle */}
-                <div className="flex bg-paper-warm rounded-lg p-0.5">
+                <div className="flex bg-paper-warm rounded-lg p-0.5 shrink-0">
                     <button
                         onClick={() => setUnit('pages')}
-                        className={`px-2 py-1 rounded-md text-tiny font-medium transition-colors ${unit === 'pages'
+                        className={`px-1.5 sm:px-2 py-1 rounded-md text-tiny font-medium transition-colors ${unit === 'pages'
                                 ? 'bg-surface text-primary shadow-sm'
                                 : 'text-ink-muted hover:text-ink'
                             }`}
                     >
-                        Halaman
+                        <span className="hidden xs:inline">Halaman</span>
+                        <span className="xs:hidden">Hal</span>
                     </button>
                     <button
                         onClick={() => setUnit('minutes')}
-                        className={`px-2 py-1 rounded-md text-tiny font-medium transition-colors ${unit === 'minutes'
+                        className={`px-1.5 sm:px-2 py-1 rounded-md text-tiny font-medium transition-colors ${unit === 'minutes'
                                 ? 'bg-surface text-primary shadow-sm'
                                 : 'text-ink-muted hover:text-ink'
                             }`}
                     >
-                        Menit
+                        <span className="hidden xs:inline">Menit</span>
+                        <span className="xs:hidden">Min</span>
                     </button>
                 </div>
             </div>
 
             {/* Bar Chart */}
             {hasData ? (
-                <div className="flex items-end justify-between gap-1 h-24">
+                <div className="flex items-end justify-between gap-0.5 sm:gap-1 h-24 w-full min-w-0">
                     {dailyStats.map((day, index) => {
                         const value = unit === 'pages' ? day.pages : day.minutes
                         const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0
@@ -123,36 +125,36 @@ export function WeeklyReadingStats({ onRefresh }) {
                     })}
                 </div>
             ) : (
-                <div className="h-24 flex items-center justify-center text-center">
-                    <div>
+                <div className="h-24 flex items-center justify-center text-center w-full min-w-0 px-2">
+                    <div className="max-w-full min-w-0">
                         <p className="text-small text-ink-muted">Belum ada aktivitas minggu ini</p>
-                        <p className="text-tiny text-ink-light mt-1">Log progress bacaan untuk melihat statistik</p>
+                        <p className="text-tiny text-ink-light mt-1">Log progres untuk lihat statistik</p>
                     </div>
                 </div>
             )}
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-line">
-                <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-ink-muted mb-1">
-                        <IconBook size={14} stroke={2} />
-                        <span className="text-tiny">Halaman</span>
+            <div className="grid grid-cols-3 gap-1 sm:gap-2 pt-2 border-t border-line w-full min-w-0">
+                <div className="text-center min-w-0">
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 text-ink-muted mb-1">
+                        <IconBook size={12} stroke={2} className="shrink-0" />
+                        <span className="text-tiny truncate">Hal</span>
                     </div>
-                    <p className="text-h3 text-ink">{weeklyTotal.pages}</p>
+                    <p className="text-h3 text-ink truncate">{weeklyTotal.pages}</p>
                 </div>
-                <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-ink-muted mb-1">
-                        <IconClock size={14} stroke={2} />
-                        <span className="text-tiny">Menit</span>
+                <div className="text-center min-w-0">
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 text-ink-muted mb-1">
+                        <IconClock size={12} stroke={2} className="shrink-0" />
+                        <span className="text-tiny truncate">Menit</span>
                     </div>
-                    <p className="text-h3 text-ink">{weeklyTotal.minutes}</p>
+                    <p className="text-h3 text-ink truncate">{weeklyTotal.minutes}</p>
                 </div>
-                <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-ink-muted mb-1">
-                        <span className="text-tiny">🔥</span>
-                        <span className="text-tiny">Streak</span>
+                <div className="text-center min-w-0">
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 text-ink-muted mb-1">
+                        <IconFlame size={12} stroke={2} className="shrink-0" />
+                        <span className="text-tiny truncate">Streak</span>
                     </div>
-                    <p className="text-h3 text-ink">{streak} <span className="text-small text-ink-muted">hari</span></p>
+                    <p className="text-h3 text-ink"><span className="truncate inline-block max-w-full">{streak}</span> <span className="text-tiny text-ink-muted">hari</span></p>
                 </div>
             </div>
         </div>

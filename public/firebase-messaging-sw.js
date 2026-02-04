@@ -26,8 +26,8 @@ const messaging = firebase.messaging()
 
 self.addEventListener('install', (event) => {
     console.log('[SW] Installing...')
-    // Skip waiting untuk update cepat
-    self.skipWaiting()
+    // DON'T auto skipWaiting - let user decide via update prompt
+    // self.skipWaiting() akan dipanggil dari PWAUpdatePrompt
 })
 
 self.addEventListener('activate', (event) => {
@@ -35,9 +35,10 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim())
 })
 
-// Best Practice PWA: Handle SKIP_WAITING message
+// Best Practice PWA: Handle SKIP_WAITING message from user action
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
+        console.log('[SW] User accepted update, activating...')
         self.skipWaiting()
     }
 })
@@ -134,21 +135,28 @@ self.addEventListener('notificationclick', (event) => {
             type: 'window',
             includeUncontrolled: true
         }).then((clientList) => {
+            console.log('[SW] Found clients:', clientList.length)
+            
             // Cari window yang sudah buka origin yang sama
             for (const client of clientList) {
-                if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+                if (client.url.startsWith(self.location.origin)) {
+                    console.log('[SW] Focusing existing client and navigating to:', route)
                     return client.focus().then((focusedClient) => {
                         // Navigate ke route spesifik via postMessage
-                        return focusedClient.postMessage({
-                            type: 'NAVIGATE',
-                            route: route,
-                            data: notificationData
-                        })
+                        if (focusedClient) {
+                            focusedClient.postMessage({
+                                type: 'NAVIGATE',
+                                route: route,
+                                data: notificationData
+                            })
+                        }
+                        return focusedClient
                     })
                 }
             }
 
             // Tidak ada window, buka baru
+            console.log('[SW] No existing client, opening new window:', urlToOpen)
             if (clients.openWindow) {
                 return clients.openWindow(urlToOpen)
             }

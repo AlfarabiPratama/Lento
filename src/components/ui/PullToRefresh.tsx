@@ -109,7 +109,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const spinnerRotation = (pullPercentage / 100) * 360;
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div ref={containerRef} className={`relative w-full min-w-0 ${className}`}>
       {/* Pull indicator */}
       <div
         className="absolute top-0 left-0 right-0 flex items-center justify-center transition-all duration-200 z-50"

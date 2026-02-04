@@ -214,8 +214,9 @@ export function Calendar() {
                 <div className="flex items-center gap-2 flex-shrink-0">
                     {/* Streak badge */}
                     {streakData?.currentStreak > 0 && (
-                        <div className="tag-primary hidden sm:flex">
-                            🔥 {streakData.currentStreak} hari
+                        <div className="tag-primary hidden sm:flex items-center gap-1.5">
+                            <IconFlame size={16} className="flex-shrink-0" />
+                            <span>{streakData.currentStreak} hari</span>
                         </div>
                     )}
 
@@ -402,7 +403,10 @@ export function Calendar() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-body text-ink-muted">Streak Saat Ini</span>
-                                <span className="text-h3 text-warning">{streakData?.currentStreak || 0} 🔥</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-h3 text-warning">{streakData?.currentStreak || 0}</span>
+                                    <IconFlame size={20} className="text-warning" />
+                                </div>
                             </div>
                             {streakData?.longestStreak > 0 && (
                                 <div className="flex items-center justify-between">

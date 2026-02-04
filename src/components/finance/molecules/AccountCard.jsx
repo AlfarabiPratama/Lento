@@ -33,12 +33,41 @@ function AccountCard({
     const config = ACCOUNT_TYPES[type] || ACCOUNT_TYPES.cash
     const IconComponent = config.IconComponent
 
+    let pressTimer = null
+
     const handleClick = onClick ? () => onClick(id) : undefined
+    
+    const handleDoubleClick = (e) => {
+        e.stopPropagation()
+        if (onEdit) {
+            onEdit({ id, name, type, provider, balance_cached: balance, opening_balance: balance })
+        }
+    }
+
+    // Long-press for mobile
+    const handleTouchStart = (e) => {
+        if (!onEdit) return
+        pressTimer = setTimeout(() => {
+            e.preventDefault()
+            onEdit({ id, name, type, provider, balance_cached: balance, opening_balance: balance })
+        }, 500) // 500ms long-press
+    }
+
+    const handleTouchEnd = () => {
+        if (pressTimer) {
+            clearTimeout(pressTimer)
+            pressTimer = null
+        }
+    }
 
     return (
         <button
             type="button"
             onClick={handleClick}
+            onDoubleClick={handleDoubleClick}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
             className={`
         w-full text-left p-4 rounded-xl transition-all
         border-2 group
@@ -48,6 +77,7 @@ function AccountCard({
                 }
         ${className}
       `}
+            title={onEdit ? "Double-click atau long-press untuk edit" : undefined}
         >
             <div className="flex items-center gap-3">
                 {/* Icon */}

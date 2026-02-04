@@ -1,19 +1,31 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { IconX } from '@tabler/icons-react'
 import { useAccounts, ACCOUNT_TYPES, EWALLET_PROVIDERS } from '../hooks/useFinance'
+import { MoneyInput } from './finance/molecules/MoneyInput'
 
 /**
- * AddAccountModal - Form to create new account (dompet)
+ * AddAccountModal - Form to create/edit account (dompet)
+ * Supports both create and edit mode
  */
-function AddAccountModal({ onClose, onSuccess }) {
-    const { create } = useAccounts()
+function AddAccountModal({ mode = 'create', initialData = {}, onClose, onSuccess }) {
+    const { create, update } = useAccounts()
 
     const [name, setName] = useState('')
     const [type, setType] = useState('cash')
     const [provider, setProvider] = useState('')
-    const [openingBalance, setOpeningBalance] = useState('')
+    const [openingBalance, setOpeningBalance] = useState(0)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState('')
+
+    // Load initial data for edit mode
+    useEffect(() => {
+        if (mode === 'edit' && initialData) {
+            setName(initialData.name || '')
+            setType(initialData.type || 'cash')
+            setProvider(initialData.provider || '')
+            setOpeningBalance(initialData.opening_balance || initialData.balance_cached || 0)
+        }
+    }, [mode, initialData])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -26,12 +38,19 @@ function AddAccountModal({ onClose, onSuccess }) {
 
         try {
             setSaving(true)
-            await create({
+            
+            const accountData = {
                 name: name.trim(),
                 type,
                 provider: provider || '',
-                opening_balance: parseFloat(openingBalance) || 0,
-            })
+                opening_balance: openingBalance || 0,
+            }
+
+            if (mode === 'edit' && initialData.id) {
+                await update(initialData.id, accountData)
+            } else {
+                await create(accountData)
+            }
 
             if (onSuccess) onSuccess()
             if (onClose) onClose()
@@ -46,7 +65,7 @@ function AddAccountModal({ onClose, onSuccess }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className="card p-6 w-full max-w-md animate-in" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-h2 text-ink">Tambah Dompet</h3>
+                    <h3 className="text-h2 text-ink">{mode === 'edit' ? 'Edit Dompet' : 'Tambah Dompet'}</h3>
                     <button onClick={onClose} className="btn-icon" aria-label="Tutup">
                         <IconX size={18} stroke={1.5} />
                     </button>
@@ -125,21 +144,21 @@ function AddAccountModal({ onClose, onSuccess }) {
                         </div>
                     )}
 
-                    {/* Opening Balance */}
+                    {/* Opening Balance / Current Balance */}
                     <div>
-                        <label className="text-small text-ink-muted mb-1 block">Saldo Awal</label>
-                        <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted">Rp</span>
-                            <input
-                                type="number"
-                                placeholder="0"
-                                value={openingBalance}
-                                onChange={(e) => setOpeningBalance(e.target.value)}
-                                className="input pl-10"
-                                min="0"
-                                step="1000"
-                            />
-                        </div>
+                        <label className="text-small text-ink-muted mb-2 block">
+                            {mode === 'edit' ? 'Saldo Saat Ini' : 'Saldo Awal'}
+                        </label>
+                        <MoneyInput 
+                            value={openingBalance}
+                            onChange={setOpeningBalance}
+                            placeholder="0"
+                        />
+                        {mode === 'edit' && (
+                            <p className="text-xs text-ink-muted mt-1">
+                                💡 Edit saldo akan menyesuaikan riwayat transaksi
+                            </p>
+                        )}
                     </div>
 
                     {/* Error */}
@@ -150,7 +169,7 @@ function AddAccountModal({ onClose, onSuccess }) {
                     {/* Submit */}
                     <div className="flex gap-2">
                         <button type="submit" className="btn-primary flex-1" disabled={saving}>
-                            {saving ? 'Menyimpan...' : 'Simpan'}
+                            {saving ? 'Menyimpan...' : mode === 'edit' ? 'Update' : 'Simpan'}
                         </button>
                         <button type="button" onClick={onClose} className="btn-secondary">
                             Batal

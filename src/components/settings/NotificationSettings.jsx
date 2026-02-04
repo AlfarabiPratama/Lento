@@ -1,4 +1,4 @@
-import { IconBell, IconClock, IconMoon, IconTarget, IconBook } from '@tabler/icons-react'
+import { IconBell, IconClock, IconMoon, IconTarget, IconBook, IconPlayerPlay } from '@tabler/icons-react'
 import { useNotificationSettings } from '../../hooks/useNotificationSettings'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -9,6 +9,7 @@ import { useAuth } from '../../hooks/useAuth'
  * - Bill reminders (3-day, 1-day)
  * - Goal milestone reminders (7-day, 3-day, 1-day)
  * - Reading streak reminders (encouragement, milestones, re-engagement)
+ * - Pomodoro timer notifications (work complete, break complete)
  * - Quiet hours configuration
  */
 export function NotificationSettings() {
@@ -22,6 +23,8 @@ export function NotificationSettings() {
         toggleGoalReminder,
         toggleReadingStreakReminders,
         toggleReadingStreakReminder,
+        togglePomodoroNotifications,
+        togglePomodoroNotification,
         toggleQuietHours,
         updateQuietHours
     } = useNotificationSettings()
@@ -250,6 +253,61 @@ export function NotificationSettings() {
                                         className={`btn-sm flex-shrink-0 ${settings.readingStreakReminders.reEngagement ? 'btn-primary' : 'btn-secondary'}`}
                                     >
                                         {settings.readingStreakReminders.reEngagement ? 'Aktif' : 'Nonaktif'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Pomodoro Notifications */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <IconPlayerPlay size={18} className="text-ink-muted" />
+                        <h3 className="text-h3 text-ink">Pomodoro Timer</h3>
+                    </div>
+
+                    <div className="pl-6 space-y-3">
+                        {/* Master toggle */}
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-body text-ink">Notifikasi Timer</p>
+                                <p className="text-small text-ink-muted">Notifikasi saat sesi selesai</p>
+                            </div>
+                            <button
+                                onClick={togglePomodoroNotifications}
+                                className={`btn-sm flex-shrink-0 ${settings.pomodoroNotifications?.enabled ? 'btn-primary' : 'btn-secondary'}`}
+                            >
+                                {settings.pomodoroNotifications?.enabled ? 'Aktif' : 'Nonaktif'}
+                            </button>
+                        </div>
+
+                        {/* Individual toggles */}
+                        {settings.pomodoroNotifications?.enabled && (
+                            <div className="pl-4 space-y-3 border-l-2 border-line">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-body text-ink">Sesi Fokus Selesai</p>
+                                        <p className="text-small text-ink-muted">Waktunya istirahat</p>
+                                    </div>
+                                    <button
+                                        onClick={() => togglePomodoroNotification('workComplete')}
+                                        className={`btn-sm flex-shrink-0 ${settings.pomodoroNotifications?.workComplete ? 'btn-primary' : 'btn-secondary'}`}
+                                    >
+                                        {settings.pomodoroNotifications?.workComplete ? 'Aktif' : 'Nonaktif'}
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-body text-ink">Break Selesai</p>
+                                        <p className="text-small text-ink-muted">Siap fokus lagi</p>
+                                    </div>
+                                    <button
+                                        onClick={() => togglePomodoroNotification('breakComplete')}
+                                        className={`btn-sm flex-shrink-0 ${settings.pomodoroNotifications?.breakComplete ? 'btn-primary' : 'btn-secondary'}`}
+                                    >
+                                        {settings.pomodoroNotifications?.breakComplete ? 'Aktif' : 'Nonaktif'}
                                     </button>
                                 </div>
                             </div>

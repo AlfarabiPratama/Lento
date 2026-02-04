@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { IconArrowLeft, IconPlus, IconMinus, IconArrowsExchange, IconPigMoney, IconReceipt, IconChartBar, IconRepeat } from '@tabler/icons-react'
+import { IconArrowLeft, IconPlus, IconMinus, IconArrowsExchange, IconPigMoney, IconReceipt, IconChartBar, IconRepeat, IconDownload } from '@tabler/icons-react'
 import { PullToRefresh } from '../components/ui/PullToRefresh'
 import { haptics } from '../utils/haptics'
 
@@ -12,10 +12,20 @@ import BudgetPanel from '../components/finance/organisms/BudgetPanel'
 import InsightsPanel from '../components/finance/organisms/InsightsPanel'
 import RecurringManager from '../components/finance/organisms/RecurringManager'
 import BillsPanel from '../components/finance/organisms/BillsPanel'
+import { CategoryManager } from '../components/finance/organisms/CategoryManager'
+import { ExportModal } from '../components/finance/organisms/ExportModal'
+import { TemplateManager } from '../components/finance/organisms/TemplateManager'
 
 // Molecules
 import AccountCard from '../components/finance/molecules/AccountCard'
 import AccountChip, { AddAccountChip } from '../components/finance/molecules/AccountChip'
+import QuickStats from '../components/finance/molecules/QuickStats'
+import DateFilter from '../components/finance/molecules/DateFilter'
+import { TagFilter } from '../components/finance/molecules/TagFilter'
+
+// Utils
+import { filterTransactionsByDate } from '../utils/dateFilters'
+import * as templateRepo from '../lib/transactionTemplates'
 
 // Hooks
 import { useAccounts, useTransactions, useCurrentMonthSummary, useFinanceCategories } from '../hooks/useFinance'
@@ -39,20 +49,35 @@ function FinancePage() {
 
     // Data hooks
     const { accounts, netWorth, refresh: refreshAccounts } = useAccounts()
-    const { transactions, create: createTransaction, remove: removeTransaction, refresh: refreshTransactions } = useTransactions()
+    const { transactions, create: createTransaction, update: updateTransaction, remove: removeTransaction, refresh: refreshTransactions } = useTransactions()
     const { summary, refresh: refreshSummary } = useCurrentMonthSummary()
-    const { categories } = useFinanceCategories()
+    const { categories, customCategories, addCustom, removeCustom } = useFinanceCategories()
+
+    // Templates state
+    const [templates, setTemplates] = useState([])
+    const [showTemplateManager, setShowTemplateManager] = useState(false)
 
     // Run recurring generator on mount
     useRecurringGenerator()
+
+    // Load templates
+    useEffect(() => {
+        templateRepo.getTransactionTemplates().then(setTemplates)
+    }, [])
 
     // UI state
     const [mainTab, setMainTab] = useState('transactions') // 'transactions' | 'budget'
     const [selectedAccountId, setSelectedAccountId] = useState(null)
     const [activeTab, setActiveTab] = useState('all')
+    const [dateFilter, setDateFilter] = useState({ type: 'all' })
+    const [tagFilter, setTagFilter] = useState(null)
     const [showAddAccount, setShowAddAccount] = useState(false)
+    const [editingAccount, setEditingAccount] = useState(null)
     const [showTxnSheet, setShowTxnSheet] = useState(false)
     const [txnSheetType, setTxnSheetType] = useState('expense')
+    const [editingTransaction, setEditingTransaction] = useState(null)
+    const [showCategoryManager, setShowCategoryManager] = useState(false)
+    const [showExportModal, setShowExportModal] = useState(false)
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024)
 
     // Handle ?open=txn query param from shortcuts and ?tab=bills from notifications
@@ -104,33 +129,139 @@ function FinancePage() {
         haptics.light()
     }
 
-    // Filter transactions by selected account
+    // Filter transactions by selected account, date, and tags
     const displayedTransactions = useMemo(() => {
-        if (!selectedAccountId) return transactions
-        return transactions.filter(
-            t => t.account_id === selectedAccountId || t.to_account_id === selectedAccountId
-        )
-    }, [transactions, selectedAccountId])
+        let filtered = transactions
+        if (selectedAccountId) {
+            filtered = filtered.filter(
+                t => t.account_id === selectedAccountId || t.to_account_id === selectedAccountId
+            )
+        }
+        filtered = filterTransactionsByDate(filtered, dateFilter)
+        if (tagFilter) {
+            filtered = filtered.filter(t => t.tags && t.tags.includes(tagFilter))
+        }
+        return filtered
+    }, [transactions, selectedAccountId, dateFilter, tagFilter])
 
     // Handlers
     const handleAddTransaction = (type) => {
+        haptics.light()
+        setEditingTransaction(null)
         setTxnSheetType(type)
         setShowTxnSheet(true)
     }
 
+    const handleTransactionClick = (id) => {
+        const transaction = transactions.find(t => t.id === id)
+        if (transaction) {
+            haptics.light()
+            setEditingTransaction(transaction)
+            setTxnSheetType(transaction.type)
+            setShowTxnSheet(true)
+        }
+    }
+
+    const handleTransactionDuplicate = async (transactionData) => {
+        // Create new transaction with same data (without id and timestamp)
+        haptics.light()
+        setEditingTransaction(null)
+        setTxnSheetType(transactionData.type)
+        
+        // Pre-fill form with duplicated data
+        setTimeout(() => {
+            setEditingTransaction({
+                ...transactionData,
+                id: null, // Remove ID so it's treated as new
+                date: new Date().toISOString(), // Use current date
+            })
+            setShowTxnSheet(true)
+        }, 100)
+    }
+
+    const handleUseTemplate = () => {
+        haptics.light()
+        setShowTemplateManager(true)
+    }
+
+    const handleTemplateSelect = (template) => {
+        haptics.light()
+        setEditingTransaction({
+            type: template.type,
+            amount: template.amount,
+            category_id: template.category_id,
+            account_id: template.account_id,
+            to_account_id: template.to_account_id,
+            payment_method: template.payment_method,
+            merchant: template.merchant,
+            note: template.note,
+            tags: template.tags || [],
+            date: new Date().toISOString(),
+        })
+        setTxnSheetType(template.type)
+        setShowTxnSheet(true)
+    }
+
+    const handleSaveAsTemplate = async (templateData) => {
+        try {
+            await templateRepo.createTransactionTemplate(templateData)
+            const updated = await templateRepo.getTransactionTemplates()
+            setTemplates(updated)
+            haptics.success()
+        } catch (error) {
+            console.error('Failed to save template:', error)
+            haptics.error()
+        }
+    }
+
     const handleTransactionSubmit = async (data) => {
-        await createTransaction(data)
+        if (editingTransaction?.id) {
+            // Update existing transaction
+            await updateTransaction(editingTransaction.id, data)
+        } else {
+            // Create new transaction
+            await createTransaction(data)
+        }
         await Promise.all([refreshAccounts(), refreshTransactions(), refreshSummary()])
+        setEditingTransaction(null)
     }
 
     const handleTransactionDelete = async (id) => {
-        await removeTransaction(id)
-        await Promise.all([refreshAccounts(), refreshTransactions(), refreshSummary()])
+        // Konfirmasi sebelum menghapus
+        const confirmed = window.confirm('Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.')
+        
+        if (!confirmed) {
+            return // User membatalkan
+        }
+
+        try {
+            await removeTransaction(id)
+            await Promise.all([refreshAccounts(), refreshTransactions(), refreshSummary()])
+            haptics.success()
+        } catch (err) {
+            haptics.error()
+        }
+    }
+
+    const handleCloseSheet = () => {
+        setShowTxnSheet(false)
+        setEditingTransaction(null)
     }
 
     const handleAccountSuccess = () => {
         setShowAddAccount(false)
+        setEditingAccount(null)
         refreshAccounts()
+    }
+
+    const handleAccountClick = (id) => {
+        setSelectedAccountId(selectedAccountId === id ? null : id)
+    }
+
+    const handleAccountEdit = (account) => {
+        haptics.light()
+        setEditingAccount(account)
+        setShowAddAccount(true)
     }
 
     // Main tab options
@@ -144,6 +275,7 @@ function FinancePage() {
 
     // Render
     return (
+        <>
         <PullToRefresh onRefresh={handleRefresh}>
             <div className="space-y-4 animate-in max-w-full overflow-x-hidden">{/* Mobile: Back button */}
             {!isDesktop && (
@@ -237,7 +369,8 @@ function FinancePage() {
                                                 provider={account.provider}
                                                 balance={account.balance_cached}
                                                 isActive={selectedAccountId === account.id}
-                                                onClick={(id) => setSelectedAccountId(selectedAccountId === id ? null : id)}
+                                                onClick={handleAccountClick}
+                                                onEdit={handleAccountEdit}
                                             />
                                         ))}
                                     </div>
@@ -253,6 +386,9 @@ function FinancePage() {
 
                             {/* Right: Transactions panel (flex-1) */}
                             <div className="flex-1 space-y-4">
+                                {/* Quick Stats */}
+                                <QuickStats transactions={transactions} accounts={accounts} />
+                                
                                 {/* Quick actions */}
                                 <div className="flex gap-2">
                                     <button onClick={() => handleAddTransaction('expense')} className="btn-secondary" aria-label="Tambah pengeluaran">
@@ -275,11 +411,27 @@ function FinancePage() {
                                     </button>
                                 </div>
 
+                                {/* Date Filter */}
+                                <DateFilter value={dateFilter} onChange={setDateFilter} />
+
+                                {/* Tag Filter */}
+                                <TagFilter allTransactions={transactions} value={tagFilter} onChange={setTagFilter} />
+
+                                {/* Export Button */}
+                                <button
+                                    onClick={() => setShowExportModal(true)}
+                                    className="btn-secondary w-full"
+                                >
+                                    <IconDownload size={18} />
+                                    <span>Export ke CSV</span>
+                                </button>
+
                                 <TransactionsPanel
                                     transactions={displayedTransactions}
                                     accountsMap={accountsMap}
                                     activeTab={activeTab}
                                     onTabChange={setActiveTab}
+                                    onTransactionClick={handleTransactionClick}
                                     onTransactionDelete={handleTransactionDelete}
                                     onAddClick={() => handleAddTransaction('expense')}
                                 />
@@ -297,14 +449,19 @@ function FinancePage() {
                                             id={account.id}
                                             name={account.name}
                                             type={account.type}
+                                            provider={account.provider}
                                             balance={account.balance_cached}
                                             isActive={selectedAccountId === account.id}
                                             onClick={(id) => setSelectedAccountId(selectedAccountId === id ? null : id)}
+                                            onEdit={handleAccountEdit}
                                         />
                                     ))}
                                     <AddAccountChip onClick={() => setShowAddAccount(true)} />
                                 </div>
                             </div>
+
+                            {/* Quick Stats */}
+                            <QuickStats transactions={transactions} accounts={accounts} />
 
                             {/* Quick actions - compact on mobile */}
                             <div className="grid grid-cols-3 gap-1 sm:gap-2">
@@ -340,12 +497,28 @@ function FinancePage() {
                                 </button>
                             </div>
 
+                            {/* Date Filter */}
+                            <DateFilter value={dateFilter} onChange={setDateFilter} />
+
+                            {/* Tag Filter */}
+                            <TagFilter allTransactions={transactions} value={tagFilter} onChange={setTagFilter} />
+
+                            {/* Export Button */}
+                            <button
+                                onClick={() => setShowExportModal(true)}
+                                className="btn-secondary w-full"
+                            >
+                                <IconDownload size={18} />
+                                <span>Export ke CSV</span>
+                            </button>
+
                             {/* Transactions list */}
                             <TransactionsPanel
                                 transactions={displayedTransactions}
                                 accountsMap={accountsMap}
                                 activeTab={activeTab}
                                 onTabChange={setActiveTab}
+                                onTransactionClick={handleTransactionClick}
                                 onTransactionDelete={handleTransactionDelete}
                                 onAddClick={() => handleAddTransaction('expense')}
                             />
@@ -353,26 +526,67 @@ function FinancePage() {
                     )}
                 </>
             )}
-
-            {/* Add Account Modal */}
-            {showAddAccount && (
-                <AddAccountModal
-                    onClose={() => setShowAddAccount(false)}
-                    onSuccess={handleAccountSuccess}
-                />
-            )}
-
-            {/* Transaction Bottom Sheet */}
-            <TxnSheet
-                open={showTxnSheet}
-                onClose={() => setShowTxnSheet(false)}
-                defaultType={txnSheetType}
-                accounts={accounts}
-                categories={categories}
-                onSubmit={handleTransactionSubmit}
-            />
         </div>
         </PullToRefresh>
+
+        {/* Add Account Modal - Outside PullToRefresh for proper overlay */}
+        {showAddAccount && (
+            <AddAccountModal
+                mode={editingAccount ? 'edit' : 'create'}
+                initialData={editingAccount || {}}
+                onClose={() => {
+                    setShowAddAccount(false)
+                    setEditingAccount(null)
+                }}
+                onSuccess={handleAccountSuccess}
+            />
+        )}
+
+        {/* Transaction Bottom Sheet - Outside PullToRefresh for full-screen overlay */}
+        <TxnSheet
+            open={showTxnSheet}
+            onClose={handleCloseSheet}
+            mode={editingTransaction?.id ? 'edit' : 'create'}
+            defaultType={txnSheetType}
+            initialData={editingTransaction || {}}
+            accounts={accounts}
+            categories={categories}
+            onSubmit={handleTransactionSubmit}
+            onDelete={editingTransaction?.id ? () => handleTransactionDelete(editingTransaction.id) : undefined}
+            onDuplicate={editingTransaction?.id ? () => handleTransactionDuplicate(editingTransaction) : undefined}
+            onManageCategories={() => setShowCategoryManager(true)}
+            onUseTemplate={handleUseTemplate}
+            onSaveAsTemplate={handleSaveAsTemplate}
+        />
+
+        {/* Category Manager Modal */}
+        {showCategoryManager && (
+            <CategoryManager
+                customCategories={customCategories}
+                onAdd={addCustom}
+                onRemove={removeCustom}
+                onClose={() => setShowCategoryManager(false)}
+            />
+        )}
+
+        {/* Export Modal */}
+        {showExportModal && (
+            <ExportModal
+                transactions={transactions}
+                accounts={accounts}
+                onClose={() => setShowExportModal(false)}
+            />
+        )}
+
+        {/* Template Manager Modal */}
+        {showTemplateManager && (
+            <TemplateManager
+                templates={templates}
+                onUseTemplate={handleTemplateSelect}
+                onClose={() => setShowTemplateManager(false)}
+            />
+        )}
+        </>
     )
 }
 

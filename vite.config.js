@@ -4,6 +4,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
+  server: {
+    host: true, // Allow access from network
+    port: 5173,
+  },
   build: {
     chunkSizeWarningLimit: 1000,
     // Enable source maps for production debugging (disabled for smaller bundle)
@@ -83,8 +87,16 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['**/*.{js,css,html,png,svg}'],
+      devOptions: {
+        enabled: false, // Disable in dev to avoid conflicts
+      },
+      injectRegister: 'inline', // Inject registration code inline
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json}'],
+        // Don't fail the build if SW can't be generated
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

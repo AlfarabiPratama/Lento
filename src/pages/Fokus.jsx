@@ -146,16 +146,19 @@ function Fokus() {
             <section className="card">
                 <div className="flex items-start gap-3">
                     <IconBell size={20} stroke={1.5} className="text-ink-muted mt-0.5" />
-                    <div>
-                        <h3 className="text-h3 text-ink">Notifikasi</h3>
+                    <div className="flex-1">
+                        <h3 className="text-h3 text-ink">Notifikasi Timer</h3>
                         <p className="text-small text-ink-muted mt-1">
-                            Lento akan mengirim notifikasi saat sesi selesai. Pastikan notifikasi browser diizinkan.
+                            Lento akan mengirim notifikasi saat sesi fokus atau break selesai.
                         </p>
                         <button
-                            onClick={() => Notification.requestPermission()}
+                            onClick={() => {
+                                const params = new URLSearchParams({ tab: 'tampilan' })
+                                window.location.href = `/settings?${params.toString()}`
+                            }}
                             className="btn-secondary btn-sm mt-3"
                         >
-                            Izinkan notifikasi
+                            Atur di Settings →
                         </button>
                     </div>
                 </div>

@@ -26,9 +26,17 @@ export default function PWAUpdatePrompt() {
     navigator.serviceWorker.ready.then((registration) => {
       // Check if there's an update waiting
       if (registration.waiting) {
-        console.log('PWA: Update available (waiting worker found)')
-        setWaitingWorker(registration.waiting)
-        setShowUpdatePrompt(true)
+        const waitingWorkerScriptUrl = registration.waiting.scriptURL
+        const dismissedVersion = localStorage.getItem('pwa-update-dismissed')
+        
+        // Only show if this version wasn't dismissed before
+        if (dismissedVersion !== waitingWorkerScriptUrl) {
+          console.log('PWA: Update available (waiting worker found)')
+          setWaitingWorker(registration.waiting)
+          setShowUpdatePrompt(true)
+        } else {
+          console.log('PWA: Update was previously dismissed, not showing prompt')
+        }
       }
 
       // Listen for updates
@@ -40,9 +48,17 @@ export default function PWAUpdatePrompt() {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // New service worker installed, ready to activate
-              console.log('PWA: New service worker installed, ready to activate')
-              setWaitingWorker(newWorker)
-              setShowUpdatePrompt(true)
+              const waitingWorkerScriptUrl = newWorker.scriptURL
+              const dismissedVersion = localStorage.getItem('pwa-update-dismissed')
+              
+              // Only show if this version wasn't dismissed before
+              if (dismissedVersion !== waitingWorkerScriptUrl) {
+                console.log('PWA: New service worker installed, ready to activate')
+                setWaitingWorker(newWorker)
+                setShowUpdatePrompt(true)
+              } else {
+                console.log('PWA: Update was previously dismissed, not showing prompt')
+              }
             }
           })
         }
@@ -61,6 +77,9 @@ export default function PWAUpdatePrompt() {
 
     console.log('PWA: User accepted update, activating new service worker')
     
+    // Clear dismissed version (user accepted update)
+    localStorage.removeItem('pwa-update-dismissed')
+    
     // Tell service worker to skip waiting and activate immediately
     waitingWorker.postMessage({ type: 'SKIP_WAITING' })
     
@@ -75,10 +94,13 @@ export default function PWAUpdatePrompt() {
   }
 
   const handleDismiss = () => {
-    setShowUpdatePrompt(false)
+    if (waitingWorker) {
+      // Store dismissed version so we don't show again until next update
+      localStorage.setItem('pwa-update-dismissed', waitingWorker.scriptURL)
+      console.log('PWA: Update dismissed, will not prompt again for this version')
+    }
     
-    // Track dismissal (user will see update on next visit)
-    console.log('PWA: Update dismissed, will prompt again on next visit')
+    setShowUpdatePrompt(false)
   }
 
   if (!showUpdatePrompt) {

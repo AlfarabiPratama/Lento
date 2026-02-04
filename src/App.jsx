@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import AppShell from './components/AppShell'
 import { SearchProvider } from './contexts/SearchContext'
 import { SearchOverlay } from './components/search/organisms/SearchOverlay'
@@ -63,6 +63,26 @@ function AppContent() {
     const { showToast } = useToast()
     const { shouldShowPrompt, handleDismiss, handleGranted } = useSmartPermissionRequest()
     const [showPermissionPrompt, setShowPermissionPrompt] = useState(false)
+    const navigate = useNavigate()
+
+    // Listen to service worker messages for notification clicks
+    useEffect(() => {
+        if ('serviceWorker' in navigator) {
+            const handleSWMessage = (event) => {
+                if (event.data && event.data.type === 'NAVIGATE') {
+                    // Navigate to the route specified by the notification click
+                    console.log('[App] Navigating to:', event.data.route)
+                    navigate(event.data.route)
+                }
+            }
+
+            navigator.serviceWorker.addEventListener('message', handleSWMessage)
+
+            return () => {
+                navigator.serviceWorker.removeEventListener('message', handleSWMessage)
+            }
+        }
+    }, [navigate])
 
     // Show notification permission prompt if should show
     useEffect(() => {

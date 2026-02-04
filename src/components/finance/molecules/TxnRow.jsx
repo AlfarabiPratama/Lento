@@ -1,7 +1,7 @@
 import TxnTypeIcon from '../atoms/TxnTypeIcon'
 import Money from '../atoms/Money'
 import AccountBadge from '../atoms/AccountBadge'
-import { IconX } from '@tabler/icons-react'
+import { IconX, IconPhoto } from '@tabler/icons-react'
 
 /**
  * TxnRow - Single transaction row in list
@@ -16,6 +16,8 @@ import { IconX } from '@tabler/icons-react'
  * @param {'income' | 'expense' | 'transfer'} props.type
  * @param {string} props.title - Category or merchant name
  * @param {string} [props.note]
+ * @param {string[]} [props.tags] - Tags array
+ * @param {string} [props.attachment] - Base64 image data
  * @param {number} props.amount
  * @param {string} props.date - ISO date string
  * @param {string} props.accountName
@@ -31,6 +33,8 @@ function TxnRow({
     type,
     title,
     note,
+    tags = [],
+    attachment,
     amount,
     date,
     accountName,
@@ -91,6 +95,12 @@ function TxnRow({
                     <span>•</span>
                     <AccountBadge type={accountType} provider={accountName} size="sm" showLabel={false} />
                     <span className="truncate">{accountName}</span>
+                    {attachment && (
+                        <>
+                            <span>•</span>
+                            <IconPhoto size={14} className="text-primary" />
+                        </>
+                    )}
                     {note && (
                         <>
                             <span>•</span>
@@ -98,6 +108,19 @@ function TxnRow({
                         </>
                     )}
                 </div>
+                {/* Tags */}
+                {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                        {tags.map((tag, idx) => (
+                            <span
+                                key={idx}
+                                className="inline-block px-1.5 py-0.5 rounded text-xs bg-primary/10 text-primary"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Amount */}

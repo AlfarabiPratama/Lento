@@ -27,6 +27,11 @@ export function useNotificationSettings() {
             reEngagement: true,
             enabled: true,
         },
+        pomodoroNotifications: {
+            enabled: true,
+            workComplete: true,
+            breakComplete: true,
+        },
         quietHours: {
             enabled: false,
             startTime: '22:00',
@@ -122,11 +127,7 @@ export function useNotificationSettings() {
             readingStreakReminders: {
                 ...settings.readingStreakReminders,
                 [type]: !settings.readingStreakReminders[type],
-            },GoalReminder,
-        toggleGoalReminders,
-        toggleReadingStreakReminder,
-        toggleReadingStreakReminders,
-        toggle
+            },
         }
         await updateSettings(newSettings)
     }
@@ -165,11 +166,39 @@ export function useNotificationSettings() {
         await updateSettings(newSettings)
     }
 
+    const togglePomodoroNotifications = async () => {
+        const newSettings = {
+            ...settings,
+            pomodoroNotifications: {
+                ...settings.pomodoroNotifications,
+                enabled: !settings.pomodoroNotifications.enabled,
+            },
+        }
+        await updateSettings(newSettings)
+    }
+
+    const togglePomodoroNotification = async (type) => {
+        const newSettings = {
+            ...settings,
+            pomodoroNotifications: {
+                ...settings.pomodoroNotifications,
+                [type]: !settings.pomodoroNotifications[type],
+            },
+        }
+        await updateSettings(newSettings)
+    }
+
     return {
         settings,
         loading,
         toggleBillReminder,
         toggleBillReminders,
+        toggleGoalReminder,
+        toggleGoalReminders,
+        toggleReadingStreakReminder,
+        toggleReadingStreakReminders,
+        togglePomodoroNotifications,
+        togglePomodoroNotification,
         toggleQuietHours,
         updateQuietHours,
     }

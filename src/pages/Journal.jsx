@@ -2,9 +2,15 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { IconPlus, IconX } from '@tabler/icons-react'
 import { useJournals } from '../hooks/useJournals'
+import { useFormValidation } from '../hooks/useFormValidation'
+import { useToast } from '../contexts/ToastContext'
 import EmptyState from '../components/EmptyState'
+import { FormField } from '../components/ui/FormField'
+import { SwipeToDelete } from '../components/ui/SwipeableListItem'
 import { ShareButton } from '../components/ui/ShareButton'
 import { buildJournalShareText } from '../lib/share'
+import { journalSchema } from '../lib/validationSchemas'
+import { haptics } from '../utils/haptics'
 
 const moods = [
     { value: 'great', emoji: '😊', label: 'Senang' },
@@ -27,10 +33,42 @@ const journalPrompts = [
 function Journal() {
     const [searchParams, setSearchParams] = useSearchParams()
     const { journals, loading, create, remove } = useJournals()
-    const [content, setContent] = useState('')
-    const [mood, setMood] = useState(null)
-    const [saving, setSaving] = useState(false)
     const [showComposer, setShowComposer] = useState(false)
+    const { showToast } = useToast()
+
+    // Form validation
+    const {
+        values,
+        errors,
+        touched,
+        handleChange,
+        handleBlur,
+        handleSubmit,
+        resetForm,
+        setFieldValue,
+        isSubmitting,
+    } = useFormValidation({
+        initialValues: {
+            content: '',
+            mood: null,
+            type: 'quick'
+        },
+        validationSchema: journalSchema,
+        onSubmit: async (formValues) => {
+            try {
+                await create(formValues)
+                haptics.success()
+                showToast('success', 'Jurnal berhasil disimpan')
+                resetForm()
+                setShowComposer(false)
+            } catch (err) {
+                haptics.error()
+                showToast('error', 'Gagal menyimpan jurnal')
+                console.error('Error creating journal:', err)
+                throw err
+            }
+        }
+    })
 
     // Handle ?open=quick query param from shortcuts
     useEffect(() => {
@@ -42,24 +80,21 @@ function Journal() {
         }
     }, [searchParams, setSearchParams])
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        if (!content.trim()) return
-
-        try {
-            setSaving(true)
-            await create({ content, mood, type: 'quick' })
-            setContent('')
-            setMood(null)
-            setShowComposer(false)
-        } finally {
-            setSaving(false)
-        }
+    const handleUsePrompt = (prompt) => {
+        setFieldValue('content', prompt + '\n\n')
+        setShowComposer(true)
+        haptics.light()
     }
 
-    const handleUsePrompt = (prompt) => {
-        setContent(prompt + '\n\n')
-        setShowComposer(true)
+    const handleDeleteJournal = async (id) => {
+        try {
+            await remove(id)
+            haptics.success()
+            showToast('success', 'Jurnal dihapus')
+        } catch (err) {
+            haptics.error()
+            showToast('error', 'Gagal menghapus jurnal')
+        }
     }
 
     const formatDate = (dateStr) => {
@@ -155,7 +190,7 @@ function Journal() {
                     <div className="flex items-center justify-between">
                         <h2 className="text-h2 text-ink">Jurnal 3 menit</h2>
                         <span className="tag-secondary">
-                            {content.trim().split(/\s+/).filter(Boolean).length} kata
+                            {values.content.trim().split(/\s+/).filter(Boolean).length} kata
                         </span>
                     </div>
 
@@ -167,8 +202,8 @@ function Journal() {
                                 <button
                                     key={m.value}
                                     type="button"
-                                    onClick={() => setMood(mood === m.value ? null : m.value)}
-                                    className={`flex-1 py-2.5 rounded-lg text-center transition-all duration-normal ${mood === m.value
+                                    onClick={() => setFieldValue('mood', values.mood === m.value ? null : m.value)}
+                                    className={`flex-1 py-2.5 rounded-lg text-center transition-all duration-normal ${values.mood === m.value
                                         ? 'bg-primary-50 border-2 border-primary shadow-sm'
                                         : 'bg-paper-warm hover:bg-paper-cream border-2 border-transparent'
                                         }`}
@@ -181,23 +216,39 @@ function Journal() {
                         </div>
                     </div>
 
-                    <textarea
-                        placeholder="Hari ini aku merasa..."
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        className="textarea"
-                        rows={5}
-                        autoFocus
-                    />
+                    <FormField
+                        label="Tuliskan jurnalmu"
+                        hint="Minimal 10 karakter. Tulis apa saja yang kamu rasakan hari ini."
+                        error={errors.content}
+                        touched={touched.content}
+                        required
+                        fieldId="journal-content"
+                    >
+                        <textarea
+                            name="content"
+                            id="journal-content"
+                            placeholder="Hari ini aku merasa..."
+                            value={values.content}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            className="textarea"
+                            rows={5}
+                            autoFocus
+                        />
+                    </FormField>
 
                     <div className="flex gap-2">
-                        <button type="submit" className="btn-primary" disabled={!content.trim() || saving}>
-                            {saving ? 'Menyimpan...' : 'Simpan jurnal'}
+                        <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                            {isSubmitting ? 'Menyimpan...' : 'Simpan jurnal'}
                         </button>
                         <button
                             type="button"
-                            onClick={() => { setShowComposer(false); setContent(''); setMood(null); }}
+                            onClick={() => { 
+                                setShowComposer(false)
+                                resetForm()
+                            }}
                             className="btn-secondary"
+                            disabled={isSubmitting}
                         >
                             Batal
                         </button>
@@ -215,34 +266,39 @@ function Journal() {
 
                     <div className="space-y-3">
                         {journals.map((entry) => (
-                            <div key={entry.id} className="card group">
-                                <div className="flex items-start justify-between gap-3 mb-2">
-                                    <div className="flex items-center gap-2">
-                                        {entry.mood && <span className="text-xl">{getMoodEmoji(entry.mood)}</span>}
-                                        <span className="text-small text-ink-muted">{formatDate(entry.created_at)}</span>
+                            <SwipeToDelete
+                                key={entry.id}
+                                onDelete={() => handleDeleteJournal(entry.id)}
+                            >
+                                <div className="card group">
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                        <div className="flex items-center gap-2">
+                                            {entry.mood && <span className="text-xl">{getMoodEmoji(entry.mood)}</span>}
+                                            <span className="text-small text-ink-muted">{formatDate(entry.created_at)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <ShareButton
+                                                title="Jurnal — Lento"
+                                                text={buildJournalShareText({
+                                                    date: entry.created_at,
+                                                    mood: getMoodEmoji(entry.mood),
+                                                    content: entry.content
+                                                })}
+                                                size="sm"
+                                            />
+                                            <button
+                                                onClick={() => handleDeleteJournal(entry.id)}
+                                                className="opacity-0 group-hover:opacity-100 min-w-11 min-h-11 flex items-center justify-center rounded-lg text-ink-muted hover:text-danger hover:bg-danger/10 transition-all"
+                                                aria-label="Hapus jurnal"
+                                            >
+                                                <IconX size={20} stroke={1.5} />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        <ShareButton
-                                            title="Jurnal — Lento"
-                                            text={buildJournalShareText({
-                                                date: entry.created_at,
-                                                mood: getMoodEmoji(entry.mood),
-                                                content: entry.content
-                                            })}
-                                            size="sm"
-                                        />
-                                        <button
-                                            onClick={() => remove(entry.id)}
-                                            className="opacity-0 group-hover:opacity-100 min-w-11 min-h-11 flex items-center justify-center rounded-lg text-ink-muted hover:text-danger hover:bg-danger/10 transition-all"
-                                            aria-label="Hapus jurnal"
-                                        >
-                                            <IconX size={20} stroke={1.5} />
-                                        </button>
-                                    </div>
+                                    <p className="text-body text-ink whitespace-pre-wrap leading-relaxed">{entry.content}</p>
+                                    <p className="text-caption text-ink-soft mt-3">{entry.word_count} kata</p>
                                 </div>
-                                <p className="text-body text-ink whitespace-pre-wrap leading-relaxed">{entry.content}</p>
-                                <p className="text-caption text-ink-soft mt-3">{entry.word_count} kata</p>
-                            </div>
+                            </SwipeToDelete>
                         ))}
                     </div>
                 </section>

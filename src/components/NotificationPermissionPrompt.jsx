@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react'
-import { IconBell, IconX } from '@tabler/icons-react'
+import { IconBell, IconX, IconCheck } from '@tabler/icons-react'
 import { requestNotificationPermission } from '../lib/firebase'
 
 export function NotificationPermissionPrompt({ onClose }) {
@@ -42,21 +42,21 @@ export function NotificationPermissionPrompt({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-scale-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-md p-6 bg-white shadow-2xl rounded-2xl animate-scale-in">
         <button
           onClick={handleMaybeLater}
-          className="absolute top-4 right-4 min-w-11 min-h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+          className="absolute flex items-center justify-center text-gray-400 rounded-full top-4 right-4 min-w-11 min-h-11 hover:text-gray-600 hover:bg-gray-100"
           aria-label="Tutup"
         >
           <IconX className="w-5 h-5" />
         </button>
 
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center min-w-11 min-h-11 bg-primary-100 rounded-full mb-4">
+        <div className="mb-6 text-center">
+          <div className="inline-flex items-center justify-center mb-4 rounded-full min-w-11 min-h-11 bg-primary-100">
             <IconBell className="w-6 h-6 text-primary-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="mb-2 text-2xl font-bold text-gray-900">
             Jangan Lewatkan Habit Anda
           </h2>
           <p className="text-gray-600">
@@ -65,25 +65,25 @@ export function NotificationPermissionPrompt({ onClose }) {
           </p>
         </div>
         
-        <div className="space-y-3 mb-6">
-          <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-            <span className="text-green-500 text-xl flex-shrink-0">✓</span>
+        <div className="mb-6 space-y-3">
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-green-50">
+            <IconCheck size={20} className="flex-shrink-0 text-green-500" />
             <div>
               <p className="font-medium text-gray-900">Smart Reminders</p>
               <p className="text-sm text-gray-600">Diingatkan sesuai waktu pilihan Anda</p>
             </div>
           </div>
           
-          <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-            <span className="text-blue-500 text-xl flex-shrink-0">✓</span>
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50">
+            <IconCheck size={20} className="flex-shrink-0 text-blue-500" />
             <div>
               <p className="font-medium text-gray-900">Bekerja Offline</p>
               <p className="text-sm text-gray-600">Terima reminder bahkan tanpa internet</p>
             </div>
           </div>
           
-          <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
-            <span className="text-purple-500 text-xl flex-shrink-0">✓</span>
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-purple-50">
+            <IconCheck size={20} className="flex-shrink-0 text-purple-500" />
             <div>
               <p className="font-medium text-gray-900">Kontrol Penuh</p>
               <p className="text-sm text-gray-600">Non-aktifkan kapan saja di Settings</p>
@@ -95,11 +95,11 @@ export function NotificationPermissionPrompt({ onClose }) {
           <button
             onClick={handleEnable}
             disabled={loading}
-            className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-4 py-3 font-medium text-white transition-colors rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span className="inline-block w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></span>
                 Mengaktifkan...
               </span>
             ) : (
@@ -109,19 +109,19 @@ export function NotificationPermissionPrompt({ onClose }) {
           
           <button
             onClick={handleMaybeLater}
-            className="w-full py-3 px-4 text-gray-600 hover:text-gray-800 font-medium"
+            className="w-full px-4 py-3 font-medium text-gray-600 hover:text-gray-800"
           >
             Nanti Saja
           </button>
         </div>
         
-        <p className="text-xs text-gray-500 text-center mt-4">
+        <p className="mt-4 text-xs text-center text-gray-500">
           Browser Anda akan meminta izin selanjutnya. Klik "Izinkan" untuk melanjutkan.
         </p>
 
         <button
           onClick={handleDontAskAgain}
-          className="w-full text-xs text-gray-400 hover:text-gray-600 mt-2"
+          className="w-full mt-2 text-xs text-gray-400 hover:text-gray-600"
         >
           Jangan tanya lagi
         </button>

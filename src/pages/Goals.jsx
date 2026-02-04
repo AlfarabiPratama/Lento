@@ -97,7 +97,7 @@ function GoalsPage() {
     const handleMarkComplete = async (goalId) => {
         try {
             await markComplete(goalId)
-            showToast('success', 'Tercapai hari ini 🎉')
+            showToast('success', 'Target tercapai!')
             handleCloseSheet()
         } catch (err) {
             console.error('Failed to mark complete:', err)

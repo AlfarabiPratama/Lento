@@ -31,9 +31,9 @@ export function BookRow({ book, onProgressClick }) {
     return (
         <div
             onClick={handleClick}
-            className="card flex items-center gap-3 hover:border-primary/50 hover:shadow-md transition-all duration-200 cursor-pointer group"
+            className="card p-3 sm:p-4 flex items-center gap-2 sm:gap-3 hover:border-primary/50 hover:shadow-md transition-all duration-200 cursor-pointer group w-full min-w-0"
         >
-            <BookCover book={book} size="small" />
+            <BookCover book={book} size="small" className="shrink-0" />
 
             <div className="flex-1 min-w-0">
                 <h3 className="text-body font-medium text-ink truncate group-hover:text-primary transition-colors">
@@ -44,7 +44,7 @@ export function BookRow({ book, onProgressClick }) {
                         {book.authors.join(', ')}
                     </p>
                 )}
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <StatusChip status={book.status} />
 
                     {/* Clickable Progress Area */}
@@ -63,7 +63,7 @@ export function BookRow({ book, onProgressClick }) {
                 </div>
             </div>
 
-            <IconChevronRight size={20} stroke={1.5} className="text-ink-light" />
+            <IconChevronRight size={20} stroke={1.5} className="text-ink-light shrink-0" />
         </div>
     )
 }

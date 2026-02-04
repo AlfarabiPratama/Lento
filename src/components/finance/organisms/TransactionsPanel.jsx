@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import TxnRow from '../molecules/TxnRow'
+import { SwipeToDelete } from '../../ui/SwipeableListItem'
 import { EMPTY_STATES, TXN_TYPES } from '../../../features/finance/constants'
 import { IconPlus, IconWallet } from '@tabler/icons-react'
 
@@ -166,20 +167,27 @@ function TransactionsPanel({
                             const toAccount = tx.to_account_id ? accountsMap[tx.to_account_id] : null
 
                             return (
-                                <TxnRow
+                                <SwipeToDelete
                                     key={tx.id}
-                                    id={tx.id}
-                                    type={tx.type}
-                                    title={tx.category_name || tx.merchant || tx.note}
-                                    note={tx.note}
-                                    amount={tx.amount}
-                                    date={tx.date}
-                                    accountName={account?.name || 'Unknown'}
-                                    accountType={account?.type || 'cash'}
-                                    toAccountName={toAccount?.name}
-                                    onClick={onTransactionClick}
-                                    onDelete={onTransactionDelete}
-                                />
+                                    onDelete={() => onTransactionDelete?.(tx.id)}
+                                    deleteLabel="Hapus"
+                                >
+                                    <TxnRow
+                                        id={tx.id}
+                                        type={tx.type}
+                                        title={tx.category_name || tx.merchant || tx.note}
+                                        note={tx.note}
+                                        tags={tx.tags || []}
+                                        attachment={tx.attachment}
+                                        amount={tx.amount}
+                                        date={tx.date}
+                                        accountName={account?.name || 'Unknown'}
+                                        accountType={account?.type || 'cash'}
+                                        toAccountName={toAccount?.name}
+                                        onClick={onTransactionClick}
+                                        onDelete={onTransactionDelete}
+                                    />
+                                </SwipeToDelete>
                             )
                         })}
                     </div>

@@ -4,7 +4,8 @@ import * as habitsService from '../lib/habits'
 /**
  * Hook untuk mengelola habits
  */
-export function useHabits() {
+export function useHabits(options = {}) {
+    const { includeArchived = false } = options
     const [habits, setHabits] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -12,7 +13,7 @@ export function useHabits() {
     const load = useCallback(async () => {
         try {
             setLoading(true)
-            const data = await habitsService.getAllHabits()
+            const data = await habitsService.getAllHabits({ includeArchived })
             setHabits(data)
             setError(null)
         } catch (err) {
@@ -20,7 +21,7 @@ export function useHabits() {
         } finally {
             setLoading(false)
         }
-    }, [])
+    }, [includeArchived])
 
     useEffect(() => {
         load()
@@ -43,7 +44,29 @@ export function useHabits() {
         setHabits(prev => prev.filter(h => h.id !== id))
     }
 
-    return { habits, loading, error, create, update, remove, refresh: load }
+    const archive = async (id) => {
+        const archived = await habitsService.archiveHabit(id)
+        if (!includeArchived) {
+            setHabits(prev => prev.filter(h => h.id !== id))
+        } else {
+            setHabits(prev => prev.map(h => h.id === id ? archived : h))
+        }
+        return archived
+    }
+
+    const unarchive = async (id) => {
+        const unarchived = await habitsService.unarchiveHabit(id)
+        setHabits(prev => prev.map(h => h.id === id ? unarchived : h))
+        return unarchived
+    }
+
+    const reorder = async (habitId, newOrder) => {
+        const updated = await habitsService.updateHabit(habitId, { order: newOrder })
+        setHabits(prev => prev.map(h => h.id === habitId ? updated : h))
+        return updated
+    }
+
+    return { habits, loading, error, create, update, remove, archive, unarchive, reorder, refresh: load }
 }
 
 /**
@@ -67,8 +90,8 @@ export function useTodayCheckins() {
         load()
     }, [load])
 
-    const checkIn = async (habitId) => {
-        const checkin = await habitsService.checkInHabit(habitId)
+    const checkIn = async (habitId, note = '') => {
+        const checkin = await habitsService.checkInHabit(habitId, new Date(), note)
         setCheckins(prev => [...prev, checkin])
         return checkin
     }

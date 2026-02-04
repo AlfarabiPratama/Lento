@@ -145,21 +145,43 @@ export function useFinanceCategories() {
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        const init = async () => {
-            await finance.initCategories()
-            const cats = await finance.getCategories()
-            setCategories(cats)
-            setLoading(false)
-        }
-        init()
+    const refresh = useCallback(async () => {
+        await finance.initCategories()
+        const cats = await finance.getCategories()
+        setCategories(cats)
+        setLoading(false)
     }, [])
+
+    useEffect(() => {
+        refresh()
+    }, [refresh])
 
     const byType = useCallback((type) => {
         return categories.filter(c => c.type === type)
     }, [categories])
 
-    return { categories, loading, byType }
+    const addCustom = useCallback(async (data) => {
+        const cat = await finance.createCustomCategory(data)
+        await refresh()
+        return cat
+    }, [refresh])
+
+    const removeCustom = useCallback(async (id) => {
+        await finance.deleteCustomCategory(id)
+        await refresh()
+    }, [refresh])
+
+    const customCategories = categories.filter(c => c.custom)
+
+    return { 
+        categories, 
+        customCategories,
+        loading, 
+        byType, 
+        addCustom, 
+        removeCustom,
+        refresh,
+    }
 }
 
 /**

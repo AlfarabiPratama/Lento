@@ -97,11 +97,32 @@ export async function signInWithGoogle() {
     if (!auth) throw new Error('Auth not available')
 
     try {
+        console.log('Starting Google Sign-In...')
         const result = await signInWithPopup(auth, googleProvider)
         console.log('Google sign-in success:', result.user.email)
         return result.user
     } catch (error) {
         console.error('Google sign-in error:', error)
+        
+        // Better error messages for common issues
+        if (error.code === 'auth/popup-closed-by-user') {
+            const friendlyError = new Error('Popup ditutup. Silakan coba lagi.')
+            friendlyError.code = error.code
+            throw friendlyError
+        } else if (error.code === 'auth/popup-blocked') {
+            const friendlyError = new Error('Popup diblokir browser. Izinkan popup untuk sign in dengan Google.')
+            friendlyError.code = error.code
+            throw friendlyError
+        } else if (error.code === 'auth/unauthorized-domain') {
+            const friendlyError = new Error('Domain tidak diizinkan. Hubungi admin untuk menambahkan domain ke Firebase.')
+            friendlyError.code = error.code
+            throw friendlyError
+        } else if (error.code === 'auth/operation-not-allowed') {
+            const friendlyError = new Error('Google Sign-In belum diaktifkan. Hubungi admin.')
+            friendlyError.code = error.code
+            throw friendlyError
+        }
+        
         throw error
     }
 }
